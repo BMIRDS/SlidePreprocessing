@@ -72,7 +72,7 @@ def make_neighborsets(elements, distance=1000):
     return groups
 
 
-def extract_slides_tiff(image_path, out_folder, window_size=112, overlap_factor=1/3, min_patches=3, target_level=0, mask_internal_bg=True):
+def extract_slides_tiff(image_path, out_folder, window_size=112, overlap_factor=1/3, output_ext='jpg', min_patches=3, target_level=0, mask_internal_bg=True):
     """
     Tiff counterpart of extract_slides function
     Extract non-white blocks of tissue from each WSI (image_path)
@@ -175,12 +175,12 @@ def extract_slides_tiff(image_path, out_folder, window_size=112, overlap_factor=
             y_start = int((c[1]-min_y)/ds_factor)
             crop[x_start:x_start+window_size,
                  y_start:y_start+window_size, :] = extracted_patch[:min(extracted_patch.shape[0], lesion_x-x_start), :min(extracted_patch.shape[1], lesion_y-y_start), :]
-        filename = "_".join([basename(image_path).split('.')[0], str(min_x), str(min_y)])+".jpg"
+        filename = "_".join([basename(image_path).split('.')[0], str(min_x), str(min_y)])+".{}".format(output_ext)
         out_path = join(out_folder, filename)
         imwrite(out_path, crop)
 
 
-def extract_slides_tiff_batch(in_folder, out_folder, window_size=112, overlap_factor=1/3, need_class=True, target_level=0, min_patches=5, mask_internal_bg=True):
+def extract_slides_tiff_batch(in_folder, out_folder, window_size=112, overlap_factor=1/3, output_ext='jpg', need_class=True, target_level=0, min_patches=5, mask_internal_bg=True):
     """
     infolder: .../class/files.jpg
 
@@ -210,6 +210,7 @@ def extract_slides_tiff_batch(in_folder, out_folder, window_size=112, overlap_fa
             out_folder_split,
             window_size=window_size,
             overlap_factor=overlap_factor,
+            output_ext=output_ext,
             target_level=target_level,
             min_patches=min_patches,
             mask_internal_bg=mask_internal_bg)
@@ -219,4 +220,10 @@ if __name__ == '__main__':
     "Function call example"
     in_folder = 'svs_folder'
     out_folder = 'output_folder'
-    extract_slides_tiff_batch(in_folder, out_folder, need_class=False, overlap_factor=1/3, target_level=0, mask_internal_bg=False)
+    extract_slides_tiff_batch(
+        in_folder, out_folder,
+        output_ext='jpg',
+        need_class=False,
+        overlap_factor=1/3,
+        target_level=0,
+        mask_internal_bg=False)
