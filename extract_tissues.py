@@ -106,7 +106,7 @@ def extract_slides_tiff(image_path, out_folder, window_size=112, overlap_factor=
         if is_tissue(patch) or is_purple(cv2.cvtColor(numpy.array(patch), cv2.COLOR_RGB2BGR)):  # if its purple (histopathology images)
             return (x_start, y_start)
 
-    multiprocess = False
+    multiprocess = False   # In experiments it didn't help accelerate the processing speed
     if multiprocess:
         configs = product(
             [img],
@@ -180,7 +180,7 @@ def extract_slides_tiff(image_path, out_folder, window_size=112, overlap_factor=
         imwrite(out_path, crop)
 
 
-def extract_slides_tiff_batch(in_folder, out_folder, window_size=112, overlap_factor=1/3, output_ext='jpg', need_class=True, target_level=0, min_patches=5, mask_internal_bg=True):
+def extract_slides_tiff_batch(in_folder, out_folder, window_size=112, overlap_factor=1/3, output_ext='jpg', need_class=True, target_level=0, min_patches=5, mask_internal_bg=True, multiprocess=0):
     """
     infolder: .../class/files.jpg
 
@@ -195,7 +195,8 @@ def extract_slides_tiff_batch(in_folder, out_folder, window_size=112, overlap_fa
         for file in files:
             if any([ext.lower() in file.split('.')[-1].lower() for ext in IMAGE_EXTS]):
                 image_paths.append(join(dirpath, file))
-    for image_path in image_paths:
+
+    def process_file(image_path):
         """Make a directory for each WSI
         """
         base = basename(image_path).split('.')[0]
@@ -215,6 +216,15 @@ def extract_slides_tiff_batch(in_folder, out_folder, window_size=112, overlap_fa
             min_patches=min_patches,
             mask_internal_bg=mask_internal_bg)
 
+    if multiprocess > 0:
+        pool = ThreadPool(multiprocess)
+        coords = pool.starmap(process_file, product(image_paths))
+        pool.close()
+        pool.join()
+    else:
+        for image_path in image_paths:
+            process_file(image_path)
+
 
 if __name__ == '__main__':
     "Function call example"
@@ -226,4 +236,5 @@ if __name__ == '__main__':
         need_class=False,
         overlap_factor=1/3,
         target_level=0,
-        mask_internal_bg=False)
+        mask_internal_bg=False,
+        multiprocess=8)
