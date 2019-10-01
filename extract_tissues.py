@@ -14,7 +14,7 @@ from cv2 import imread, imwrite
 from openslide import OpenSlide
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = 1e10
-IMAGE_EXTS = ['JPG', 'JPEG', 'PNG', 'jpg', 'jpeg', 'png']
+IMAGE_EXTS = ['tif', 'svs']
 
 """In-memory tissue extractor.
 Author: Naofumi Tomita
@@ -193,7 +193,7 @@ def extract_slides_tiff_batch(in_folder, out_folder, window_size=112, overlap_fa
     image_paths = list()
     for dirpath, dirs, files in walk(in_folder):
         for file in files:
-            if any([ext.lower() in file for ext in ['.tif', '.svs']]):
+            if any([ext.lower() in file.split('.')[-1].lower() for ext in IMAGE_EXTS]):
                 image_paths.append(join(dirpath, file))
     for image_path in image_paths:
         """Make a directory for each WSI
