@@ -1,0 +1,94 @@
+# Test case 1: slides and xmls are in the same directory
+
+
+#""" Stage 1: Tissue Extraction
+#"""
+src_1:
+- !!str ./testdata/0_test1
+# Source folder(s) containing slides (and annotations)
+
+dst_1:
+- !!str ./testdata/1_tissues_t1
+# Destination(s) to store extracted tissues
+
+target_magnification: !!float 10
+# Target magnification (typical values: 10, 20, 40)
+# For debugging, set a smaller value for faster trial and error.
+
+use_progress_bar: !!bool False
+# Set True if you want a fancy progress bar.
+
+#tissueloc_config:
+   #max_img_size: !!int # default: 4096
+   #smooth_sigma: !!int 13 # default: 13
+   #thresh_val: !!float 0.80 # default: 0.80 (e.g., 1.0 for no tissue detection. 0.85 seems to work better.)
+   #min_tissue_size: !!int #default 10000
+# To override default tissueloc sparameters, uncomment `tissueloc_config` and
+# corresponding parameters.
+
+
+#""" Shared: Stage 1 & 2
+#"""
+num_workers: !!int 4
+# The number of threads. To enable multiprocess, set True for `multiprocess`.
+
+slide_extension: !!str tif
+# Choose either 'tif' or 'svs'.
+
+opt1:
+    - !!str ''
+# Wildcard options for future extension.
+# For example, current scripts use this field to specify a path when annotations
+# are stored in different folder.
+
+skip_slide_wo_xml: !!bool False
+# Set True if you want to ignore slides without annotation.
+
+use_userdefined_has_xml: !!bool False
+# Set True if you process DH annoation
+# (Use 0_match_files.py to validate the xml and svs match.)
+
+multiprocess: !!bool False
+# Set True to enable multiprocessing (be careful, MT doesn't show error messages if any)
+
+image_suffix: !!str png
+# File extension of tissues and patches
+
+
+#""" Stage 2: Patch Extraction
+#"""
+src_2:
+    - !!str ./testdata/1_tissues_t1
+# Typically this should be the same as dst_1
+
+dst_2:
+    - !!str ./testdata/2_patches_t1
+
+window_size: !!int 256
+# Patch size (both height and width)
+
+overlap_factor: !!float 0.333
+# Extract overlapping patches.
+# For example, 0 for no overlap, 0.333 for 1/3 overlap
+
+tissue_threshold: !!float 0.7
+# A patch with at least this ratio threshold is extracted.
+# For example, 0.7 means at least 70% area of a patch should have be tissues.
+# The tissue/background detection is done with tissueloc in the first stage.
+
+
+extract_notannotated: !!bool True
+# Extract patches without annotation
+# Useful for extracting negative/normal patches.
+
+
+#""" YAML SYNTAX:
+#      - is for a list
+#      !! is for explicit data type
+#
+#    Loading:
+#    >>> import yaml
+#    >>>  f = open('config.yaml')
+#    >>> config = yaml.safe_load(f)
+#
+#"""
