@@ -43,7 +43,7 @@ def compute_magnification(slide, target_magnification=10):
     ERR_RANGE = ERR_RANGE / 100
     objective_power = None
     if 'openslide.objective-power' in slide.properties:
-        objective_power = slide.properties.get('openslide.objective-power')
+        objective_power = float(slide.properties.get('openslide.objective-power'))
 
     elif 'openslide.mpp-x' in slide.properties:
         objective_power = 10 / float(slide.properties.get('openslide.mpp-x'))
