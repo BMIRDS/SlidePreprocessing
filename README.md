@@ -96,3 +96,8 @@ $ pip install tissueloc
 ```
 $ conda install shapely
 ```
+
+### YAML:
+```
+$ pip install pyyaml
+```
