@@ -41,6 +41,13 @@ If it could not locate pairs for all the slides, use `has_xml_user` function in 
 If you use the `has_xml_user` function, please set True for `use_userdefined_has_xml` in config file.
 
 
+### No Annotations?
+If slides do not have annotations, and you still want to extract all the crops, please use the following options in config file:
+
+- `skip_slide_wo_xml` to `False`
+- `extract_notannotated` to `True`
+
+
 ### Thumbnails
 It might be helpful for you to see each of whole slides.
 

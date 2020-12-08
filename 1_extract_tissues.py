@@ -187,16 +187,22 @@ if __name__ == '__main__':
         for sp, op, dp in zip(src, opts, dst):
             entries = list(Path(sp).rglob(f"*.{slide_extension}"))
             xmls = [has_xml(e, slide_extension, op) for e in entries]
-            for x in zip(entries, xmls):
-                if skip_slide_wo_xml and x[1] is None:
-                    continue
-                print("Processing ", x)
+            for slidepath, xmlpath in zip(entries, xmls):
+                if xmlpath is None:
+                    if skip_slide_wo_xml:
+                        continue
+                    else:
+                        raise Exception(f"No corresponding XML file for {slidepath}. "
+                            "If this is expected, set skip_slide_wo_xml to True."
+                            "Otherwise check file name and update has_xml_user"
+                            "function to locate the XML file.") 
+                print("Processing ", slidepath, xmlpath)
                 extract_tissues(
-                        filepath=str(x[0].absolute()),
+                        filepath=str(slidepath.absolute()),
                         destdir=dp,
                         target_magnification=target_magnification,
                         image_suffix=image_suffix,
-                        xmlpath=x[1],
+                        xmlpath=xmlpath,
                         tissueloc_config=tissueloc_config)
         exit()
 
@@ -205,9 +211,16 @@ if __name__ == '__main__':
         if progress_bar_available:
             entries = list(Path(sp).rglob(f"*.{slide_extension}"))
             xmls = [has_xml(e, slide_extension, op) for e in entries]
-            if config.skip_slide_wo_xml:
-                entries_xmls = [(ex) for ex in zip(entries, xmls) if ex[1]]
-                entries, xmls = zip(*entries_xmls)
+            if not all(xmls):
+                if skip_slide_wo_xml:
+                    # Removing slides with no xml file.
+                    entries_xmls = [(ex) for ex in zip(entries, xmls) if ex[1]]
+                    entries, xmls = zip(*entries_xmls)
+                else:
+                    raise Exception(f"No corresponding XML file for {slidepath}. "
+                        "If this is expected, set skip_slide_wo_xml to True."
+                        "Otherwise check file name and update has_xml_user"
+                        "function to locate the XML file.") 
 
             parallel_progbar(mapper=lambda x: extract_tissues(
                 filepath=str(x[0].absolute()),
@@ -220,15 +233,16 @@ if __name__ == '__main__':
                 nprocs=num_workers, total=len(entries))
         else:
             pool = Pool(num_workers)
-            # all_xmls = set(list(Path(op['xml_root']).rglob('*.xml')))
-            # found_xmls = list()
-            counter = 0
             for e in Path(sp).rglob(f"*.{slide_extension}"):
                 xmlpath = has_xml(e, slide_extension, op)
-                if skip_slide_wo_xml and xmlpath is None:
-                    continue
-                # found_xmls.append(xmlpath)
-                counter += 1
+                if xmlpath is None:
+                    if skip_slide_wo_xml:
+                        continue
+                    else:
+                        raise Exception(f"No corresponding XML file for {e}. "
+                            "If this is expected, set skip_slide_wo_xml to True."
+                            "Otherwise check file name and update has_xml_user"
+                            "function to locate the XML file.") 
                 if xmlpath is not None:
                     xmlpath = str(xmlpath.absolute())
                 pool.apply_async(
@@ -243,7 +257,5 @@ if __name__ == '__main__':
                         'tissueloc_config': tissueloc_config,
                         }
                     )
-            # print(all_xmls - set(found_xmls)); exit()
-            # print(f"Total slides: {counter}")
             pool.close()
             pool.join()
