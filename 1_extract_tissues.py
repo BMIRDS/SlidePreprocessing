@@ -128,10 +128,15 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
                     # convert tree to target level and rect
                     for coord in subtree.iter('Coordinate'):
                         # Downscale and crop annotation
-                        coord.attrib['X'] = str(
-                            (float(coord.attrib['X']) - minx)/ds_from_level0)
-                        coord.attrib['Y'] = str(
-                            (float(coord.attrib['Y']) - miny)/ds_from_level0)
+                        # x,y coords should be larger than 0 and smaller than width or height.
+                        x_transformed = (float(coord.attrib['X']) - minx)/ds_from_level0
+                        x_transformed = max(
+                            min(x_transformed, size_x_at_target_magnification), 0)
+                        y_transformed = (float(coord.attrib['Y']) - miny)/ds_from_level0
+                        y_transformed = max(
+                            min(y_transformed, size_y_at_target_magnification), 0)
+                        coord.attrib['X'] = str(x_transformed)
+                        coord.attrib['Y'] = str(y_transformed)
 
                     # save xml file
                     tree = append_tree(tree, subtree)

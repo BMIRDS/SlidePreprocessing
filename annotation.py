@@ -115,10 +115,14 @@ def overlay_annotation(image_path, xml_path, color='green', image_suffix='png'):
     img = Image.open(image_path)
     img2 = img.copy()
     draw = ImageDraw.Draw(img2)
+    # if not hasattr(annotations[0]['polygon'], "exterior"):
+    #     print(image_path)
+    #     print(annotations[0])
+    #     print(annotations)
     draw.polygon(annotations[0]['polygon'].exterior.coords, fill=color)
     img3 = Image.blend(img, img2, 0.5)
     overlap_path = Path(image_path)
-    overlap_path = overlap_path.parent / (overlap_path.stem + f'_overlap.{image_suffix}')
+    overlap_path = overlap_path.parent / (overlap_path.stem + f'_overlay.{image_suffix}')
     img3.save(overlap_path)
 
 
