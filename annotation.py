@@ -1,7 +1,9 @@
-
+import shapely
+from shapely.ops import unary_union, polygonize
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 from shapely.geometry import Polygon, MultiPolygon  # conda install shapely
+from shapely.validation import explain_validity
 from pathlib import Path
 from shutil import copy2
 from collections import defaultdict
@@ -31,7 +33,11 @@ def load_xml(xml_path):
             print(e, coords)
             continue
         if not polygon.is_valid:
-            polygon = polygon.buffer(0)  # fix self-interaction
+            # fix self-interaction
+            # This process should be done carefully.
+            # passing 0 sometimes generate empty polygon.
+            # print(explain_validity(polygon))
+            polygon = polygon.buffer(1e-6)
         annotations.append(
             {'polygon': polygon,
              'tree': anno})
@@ -55,7 +61,6 @@ def create_tree(tag='ASAP_Annotations'):
     root = ET.Element(tag)
     tree = ET.ElementTree(root)
     node = ET.SubElement(tree.getroot(), 'Annotations')
-    # node.append(subtree)
     return tree
 
 
