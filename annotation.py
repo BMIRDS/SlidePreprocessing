@@ -1,7 +1,7 @@
 
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
-from shapely.geometry import Polygon  # conda install shapely
+from shapely.geometry import Polygon, MultiPolygon  # conda install shapely
 from pathlib import Path
 from shutil import copy2
 from collections import defaultdict
@@ -115,11 +115,14 @@ def overlay_annotation(image_path, xml_path, color='green', image_suffix='png'):
     img = Image.open(image_path)
     img2 = img.copy()
     draw = ImageDraw.Draw(img2)
-    # if not hasattr(annotations[0]['polygon'], "exterior"):
-    #     print(image_path)
-    #     print(annotations[0])
-    #     print(annotations)
-    draw.polygon(annotations[0]['polygon'].exterior.coords, fill=color)
+    polygon = annotations[0]['polygon']
+    if isinstance(polygon, MultiPolygon):
+        # multi-polygon; need draw one by one
+        for i in range(len(polygon)):
+            draw.polygon(polygon[i].exterior.coords, fill=color)
+    else:
+        # single polygon
+        draw.polygon(polygon.exterior.coords, fill=color)
     img3 = Image.blend(img, img2, 0.5)
     overlap_path = Path(image_path)
     overlap_path = overlap_path.parent / (overlap_path.stem + f'_overlay.{image_suffix}')
