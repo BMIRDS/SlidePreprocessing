@@ -153,6 +153,7 @@ if __name__ == '__main__':
             """Single thread for debugging
             """
             for slide_name, tissues in pairs.items():
+                print("Processing ", slide_name)
                 save_patches(
                     slide_name = slide_name,
                     tissues = tissues,
