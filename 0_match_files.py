@@ -28,7 +28,6 @@ if __name__ == '__main__':
     src = config.src_1
     slide_extension = config.slide_extension
     opts = [{'xml_root': opt1} for opt1 in config.opt1]
-    skip_slide_wo_xml = config.skip_slide_wo_xml
 
     if config.use_userdefined_has_xml:
         # Use CUSTOM has_xml function.

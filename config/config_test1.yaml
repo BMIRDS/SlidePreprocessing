@@ -41,8 +41,15 @@ opt1:
 # For example, current scripts use this field to specify a path when annotations
 # are stored in different folder.
 
-skip_slide_wo_xml: !!bool False
-# Set True if you want to ignore slides without annotation.
+action_no_xml: !!str raise
+# Choose an action for slides without annotation.
+# options are:
+#   raise: (default) raise an error. most conservative but best when slides must
+#         have corresponding annotation files.
+#   skip: skip slides. Use this option if you do not need non-annotated slides. 
+#         Make sure to run script0 first to know which slides are going to be skipped. 
+#   process: process slides anyway. Useful when you apply unsupervised methods.
+#         Also pay attention to `extract_notannotated` parameter.
 
 use_userdefined_has_xml: !!bool False
 # Set True if you process DH annoation

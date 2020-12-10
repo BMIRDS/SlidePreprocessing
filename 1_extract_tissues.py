@@ -163,7 +163,7 @@ if __name__ == '__main__':
     else:
         tissueloc_config = dict()
     opts = [{'xml_root': opt1} for opt1 in config.opt1]  # placeholder for possible extension
-    skip_slide_wo_xml = config.skip_slide_wo_xml
+    action_no_xml = config.action_no_xml
     if config.use_userdefined_has_xml:
         # Use CUSTOM has_xml function.
         from has_xml import has_xml_user as has_xml
@@ -189,9 +189,9 @@ if __name__ == '__main__':
             xmls = [has_xml(e, slide_extension, op) for e in entries]
             for slidepath, xmlpath in zip(entries, xmls):
                 if xmlpath is None:
-                    if skip_slide_wo_xml:
+                    if action_no_xml == 'skip':
                         continue
-                    else:
+                    elif action_no_xml == 'raise':
                         raise Exception(f"No corresponding XML file for {slidepath}. "
                             "If this is expected, set skip_slide_wo_xml to True."
                             "Otherwise check file name and update has_xml_user"
@@ -212,11 +212,11 @@ if __name__ == '__main__':
             entries = list(Path(sp).rglob(f"*.{slide_extension}"))
             xmls = [has_xml(e, slide_extension, op) for e in entries]
             if not all(xmls):
-                if skip_slide_wo_xml:
+                if action_no_xml == 'skip':
                     # Removing slides with no xml file.
                     entries_xmls = [(ex) for ex in zip(entries, xmls) if ex[1]]
                     entries, xmls = zip(*entries_xmls)
-                else:
+                elif action_no_xml == 'raise':
                     raise Exception(f"No corresponding XML file for {slidepath}. "
                         "If this is expected, set skip_slide_wo_xml to True."
                         "Otherwise check file name and update has_xml_user"
@@ -236,9 +236,9 @@ if __name__ == '__main__':
             for e in Path(sp).rglob(f"*.{slide_extension}"):
                 xmlpath = has_xml(e, slide_extension, op)
                 if xmlpath is None:
-                    if skip_slide_wo_xml:
+                    if action_no_xml == 'skip':
                         continue
-                    else:
+                    elif action_no_xml == 'raise':
                         raise Exception(f"No corresponding XML file for {e}. "
                             "If this is expected, set skip_slide_wo_xml to True."
                             "Otherwise check file name and update has_xml_user"
