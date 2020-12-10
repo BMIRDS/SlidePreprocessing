@@ -24,7 +24,14 @@ tissueloc_config:
    thresh_val: !!float 1.00 # default: 0.80 (e.g., 1.0 for no tissue detection. 0.85 seems to work better.)
    #min_tissue_size: !!int #default 10000
 # To override default tissueloc sparameters, uncomment `tissueloc_config` and
-# corresponding parameters.
+# corresponding parameters above.
+# Among those parameters, `thresh_val` is the most important parameter. If you choose smalle value
+# (e.g., 0.75), it tends to split a slide into small tissues. If you choose large value,
+# such as 1.0, it treats a whole slide as single tissue without any tissue detection,
+# which may be useful for making a thumbnail of each slide. Recommended value is 0.85,
+# but it depends on datasets and tasks.
+# Also `min_tissue_size` is another important parameter. For some slides with
+# small tissues, setting smaller value, such as 2000, would help.
 
 
 #""" Shared: Stage 1 & 2

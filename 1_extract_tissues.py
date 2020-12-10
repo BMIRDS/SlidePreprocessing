@@ -68,7 +68,8 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
     dest_root_path = Path(destdir) / Path(filepath).stem
     dest_root_path.mkdir(parents=True, exist_ok=True)
     if len(cnts) == 0:
-        print(f"No tissue found: Skipping {filepath}")
+        print(f"No tissue found: Skipping {filepath}. "
+            "Reduce min_tissue_size parameter may help locating small tissues.")
         return
 
     results = compute_magnification(slide, target_magnification)

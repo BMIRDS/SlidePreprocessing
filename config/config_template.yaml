@@ -28,6 +28,8 @@ use_progress_bar: !!bool False
 # such as 1.0, it treats a whole slide as single tissue without any tissue detection,
 # which may be useful for making a thumbnail of each slide. Recommended value is 0.85,
 # but it depends on datasets and tasks.
+# Also `min_tissue_size` is another important parameter. For some slides with
+# small tissues, setting smaller value, such as 2000, would help.
 
 #""" Shared: Stage 1 & 2
 #"""
