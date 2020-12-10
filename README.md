@@ -15,23 +15,26 @@ Author: Naofumi
 
 ## How to run for your dataset
 ### Config file
-In general, you only need to make your own config.yaml file.
+In general, you only need to make your own config.yaml file. [Template file](config/config_template.yaml) is available.
 
-There are two cases:
+There are three cases:
 1. svs files and annotations are in the same directory.
 2. svs files and annotations are in different directories.
+3. only svs files are available.
 
-For each case, please see a sample config files:
-1. [config_test1.yaml](config_test1.yaml)
-2. [config_test2.yaml](config_test2.yaml)
+For top-two cases, please see a sample config files:
+1. [config_test1.yaml](config/config_test1.yaml)
+2. [config_test2.yaml](config/config_test2.yaml)
 
 You can run these tests using a [CAMELYON sample](https://www.dropbox.com/s/fegzxxsfycy1shf/testdata.zip?dl=0) (2.7GB). 
 
 For example, using test1 config:
 ```
-$ python 1_extract_tissues.py --config config_test1.yaml
-$ python 2_extract_patches.py --config config_test1.yaml
+$ python 1_extract_tissues.py --config config/config_test1.yaml
+$ python 2_extract_patches.py --config config/config_test1.yaml
 ```
+
+For case3, please read [No Annotations section.](#no-annotations)
 
 ### Pairing Slides and Annotations
 As the first step of preprocessing, please run 0_match_files.py to make sure the script can locate pairs of slide and xml files.

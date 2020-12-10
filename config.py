@@ -6,7 +6,7 @@ import yaml
 
 def load_config():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', '-c', type=str, default='config.yaml')
+    parser.add_argument('--config', '-c', type=str, default='config/config.yaml')
     args = parser.parse_args()
     config_file = args.config
 
