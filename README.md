@@ -47,9 +47,10 @@ If you use the `has_xml_user` function, please set True for `use_userdefined_has
 ### No Annotations?
 If slides do not have annotations, and you still want to extract all the crops, please use the following options in config file:
 
-- `skip_slide_wo_xml` to `False`
+- `action_no_xml` to `process`
 - `extract_notannotated` to `True`
 
+If you simply want to skip unannotated slides, set `action_no_xml` to `skip`.
 
 ### Thumbnails
 It might be helpful for you to see each of whole slides.
