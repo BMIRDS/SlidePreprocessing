@@ -50,7 +50,7 @@ def extract_patches(img: Image, img_mask: Image, window_size: int = 224,
                 coords.append(
                     (x_start, y_start))
     if len(coords) == 0:
-        return [], []
+        return [], [], []
     xs = [c[0] for c in coords]
     ys = [c[1] for c in coords]
     min_x, max_x = min(xs), max(xs)+window_size
