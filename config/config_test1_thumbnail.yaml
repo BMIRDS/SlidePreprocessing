@@ -21,7 +21,7 @@ use_progress_bar: !!bool False
 tissueloc_config:
    #max_img_size: !!int 4096 # default: 4096
    #smooth_sigma: !!int 13 # default: 13
-   #thresh_val: !!float 1.0 # default: 0.80 (Recommended: 0.85)
+   thresh_val: !!float 1.0 # default: 0.80 (Recommended: 0.85)
    #min_tissue_size: !!int 10000 #default 10000
 # To override default tissueloc sparameters, uncomment `tissueloc_config` and
 # corresponding parameters above.
