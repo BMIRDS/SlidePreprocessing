@@ -4,7 +4,7 @@ from PIL import Image
 from pathlib import Path
 from multiprocessing import Pool
 
-os.environ["OPENCV_IO_MAX_IMAGE_PIXELS"] = str(2**64)
+os.environ["OPENCV_IO_MAX_IMAGE_PIXELS"] = str(2**63)
 Image.MAX_IMAGE_PIXELS = None
 
 from openslide import OpenSlide
@@ -17,7 +17,7 @@ from microscope import compute_magnification
 
 def extract_tissues(filepath: str, destdir: str, target_magnification: float,
                     image_suffix: str, xmlpath: str = None,
-                    tissueloc_config: dict = dict()):
+                    tissueloc_config: dict = dict(), flattening = False):
     """
     Args:
         filepath: str
@@ -49,7 +49,8 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
                     The number of pixels.
                 For details, see:
                     https://github.com/PingjunChen/tissueloc/blob/master/tissueloc/locate_tissue.py
-
+        flattening: bool
+            generate all the images in a single folder rather than creating a sub folder for each slide image.
     Generated files has the following in file name:
         minx
         miny
@@ -64,9 +65,25 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
         min_tissue_size=tissueloc_config.get('min_tissue_size', 10000))
 
     slide = OpenSlide(filepath)
+    stem = Path(filepath).stem
 
-    dest_root_path = Path(destdir) / Path(filepath).stem
-    dest_root_path.mkdir(parents=True, exist_ok=True)
+    if flattening:
+        dest_root_path = Path(destdir)
+        dest_root_path.mkdir(parents=True, exist_ok=True)
+
+        dest_path_template = dest_root_path / (
+            stem + "_{minx}_{miny}.{image_suffix}")
+        dest_mask_path_template = dest_root_path / (
+            stem + "_{minx}_{miny}_mask.{image_suffix}")
+        new_xml_file_template = dest_root_path / (
+            stem + '_{minx}_{miny}.xml')
+    else:
+        dest_root_path = Path(destdir) / stem
+        dest_root_path.mkdir(parents=True, exist_ok=True)
+
+        dest_path_template = dest_root_path / "{minx}_{miny}.{image_suffix}"
+        dest_mask_path_template = dest_root_path / "{minx}_{miny}_mask.{image_suffix}"
+        new_xml_file_template = dest_root_path / '{minx}_{miny}.xml'
     if len(cnts) == 0:
         print(f"No tissue found: Skipping {filepath}. "
             "Reduce min_tissue_size parameter may help locating small tissues.")
@@ -91,7 +108,8 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
         size_y_at_target_magnification = int(size_y_at_target_level / ds_from_target_level)
 
         # Extract tissue region at target level then resize to target magnification
-        dest_path = dest_root_path / f"{minx}_{miny}.{image_suffix}"
+        dest_path = str(dest_path_template).format(
+            minx=minx, miny=miny, image_suffix=image_suffix)
         img = slide.read_region(
             location=(minx, miny),
             size=(size_x_at_target_level, size_y_at_target_level),  # size at target level
@@ -113,8 +131,8 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
         cnt_t /= ds_from_level0
         cnt_t = cnt_t.astype(int)
         cv2.fillPoly(mask, [cnt_t], 255)
-        dest_mask_path = dest_path.parent / f"{minx}_{miny}_mask.{image_suffix}"
-        dest_mask_path = str(dest_mask_path.absolute())
+        dest_mask_path = str(dest_mask_path_template.absolute()).format(
+            minx=minx, miny=miny, image_suffix=image_suffix)
         cv2.imwrite(dest_mask_path, mask)
 
         if xmlpath is not None:
@@ -139,7 +157,8 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
                     is_updated = True
             if is_updated:
                 tree = prettify(tree)
-                new_xml_file = dest_root_path / f'{minx}_{miny}.xml'
+                new_xml_file = str(new_xml_file_template).format(
+                    minx=minx, miny=miny)
                 with open(new_xml_file, "w") as file_out:
                     file_out.write(tree)
                 overlay_annotation(
@@ -159,11 +178,30 @@ if __name__ == '__main__':
     use_progress_bar = config.use_progress_bar
     slide_extension = config.slide_extension
     image_suffix = config.image_suffix
+    flattening = config.flattening
     if hasattr(config, 'tissueloc_config'):
         tissueloc_config = config.tissueloc_config
     else:
         tissueloc_config = dict()
+
+    assert len(src) == len(dst),\
+        "The number of source and destination folders does not match. "\
+        "Double check \"src_1\" and \"dst_1\" parameters in the config file."
+    
     opts = [{'xml_root': opt1} for opt1 in config.opt1]  # placeholder for possible extension
+
+    if len(src) != len(opts):
+        # Validating parameters
+        if len(opts) == 1 and opts[0]['xml_root'] == None:
+            # Auto-expanding a trivial option parameter
+            opts = opts*len(src)
+        else:
+            # Non trivial "xml_root" is set, and thus auto-expanding is risky so
+            # raising an error for manual fix
+            assert len(src) == len(opts),\
+            "The number of source folders and options does not match. "\
+            "Double check \"src_1\" and \"opt1\" parameters in the config file."
+
     action_no_xml = config.action_no_xml
     if config.use_userdefined_has_xml:
         # Use CUSTOM has_xml function.
@@ -204,7 +242,8 @@ if __name__ == '__main__':
                         target_magnification=target_magnification,
                         image_suffix=image_suffix,
                         xmlpath=xmlpath,
-                        tissueloc_config=tissueloc_config)
+                        tissueloc_config=tissueloc_config,
+                        flattening=flattening)
         exit()
 
     """ Multi-threading"""
@@ -230,6 +269,7 @@ if __name__ == '__main__':
                 image_suffix=image_suffix,
                 xmlpath=x[1],
                 tissueloc_config=tissueloc_config,
+                flattening=flattening,
                 ), iterable=zip(entries, xmls),
                 nprocs=num_workers, total=len(entries))
         else:
@@ -256,6 +296,7 @@ if __name__ == '__main__':
                         'image_suffix': image_suffix,
                         'xmlpath': xmlpath,
                         'tissueloc_config': tissueloc_config,
+                        'flattening': flattening,
                         }
                     )
             pool.close()

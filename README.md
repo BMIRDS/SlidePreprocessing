@@ -12,19 +12,26 @@ Author: Naofumi
 ### Extract patches from tissues
 [2_extract_patches.py](2_extract_patches.py)
 
+### Recent Backward Incompatible Changes
+- "flattening" parameter
+    - Added in config file
+    - Purpose: toggle this to specify the output folder structure. With 'flattening' True, all the extracted tissues are stored in the same folder, which is useful when generating thumbnail images and wanting to see all the images without traversing folders. This also affect folders for patches; all the patches are stored in each folder that corresponds to a class.
+    - How to make a previous config file compatible: add "flattening: !!str False" line in config (yaml) file. See [Template file](config/config_template.yaml).
+
 
 ## How to run for your dataset
 ### Config file
-In general, you only need to make your own config.yaml file. [Template file](config/config_template.yaml) is available.
+In general, you only need to make your own config.yaml file. [Template file](config/config_template.yaml) is available. This template file also explains each parameter.
 
-There are three cases:
+There are three use cases:
 1. svs files and annotations are in the same directory.
 2. svs files and annotations are in different directories.
 3. only svs files are available.
 
-For top-two cases, please see a sample config files:
+For each, please see a sample config files:
 1. [config_test1.yaml](config/config_test1.yaml)
 2. [config_test2.yaml](config/config_test2.yaml)
+3. [config_test3.yaml](config/config_test3.yaml)
 
 You can run these tests using a [CAMELYON sample](https://www.dropbox.com/s/fegzxxsfycy1shf/testdata.zip?dl=0) (2.7GB). 
 
@@ -105,3 +112,15 @@ $ conda install shapely
 ```
 $ pip install pyyaml
 ```
+
+### Trouble Shooting
+- Q: What is "NonAnnotated" folder?
+- A: A patch that does not overlap with any ROI annotation is moved to "NonAnnotated" folder. If out-of-ROI regions are normal tissues, then this folder should contain normal tissues, but please make sure if this is true with the original annotators.
+
+- Q: All the patches are classified as "NonAnnotated", although there is a corresponding XML file for a slide. Why?
+- A: It happens when the 1) magnification is too low, 2) the ROI is too small and/or 3) stride is too large, thus a patch could not contain enough positive area. The default "tissue_threshold" parameter requires 70% overlap with ROI to consider a patch as a class. You can also lower the parameter at the cost of non-positive tissue noise introduced in a patch.
+
+- Q: There is no patches in "NonAnnotated" folder for a slide. Does this mean all the patches belong to certain classes and no normal tissues?
+- A: That's possible. Please double-check if that is true by opening the slide and a corresponding XML file in ASAP or generating a thimbnail image with ROI overlay.
+
+

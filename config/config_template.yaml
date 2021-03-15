@@ -1,52 +1,74 @@
-#""" Stage 1: Tissue Extraction
+#""" Stage 1 Parameters: Tissue Extraction
+# Corresponding scrits:
+# - 0_match_files.py
+# - 1_extract_tissues.py
 #"""
 src_1:
 - !!str ./slides
-# Source folder(s) containing slides (and annotations)
+# ^Source folder(s) containing slides (and annotations if exist)
+# Should work both relative and absolute paths.
+# Please note that src_1, dst_1, opt1, src_2, dst_2 parameters should be
+# described as a list of strings ("- !!str"). To process multiple folders
+# sequentially, add another item to each of parameters.
+# ex)
+# !!str folder1
+# !!str folder2
 
 dst_1:
 - !!str ./tissues
-# Destination(s) to store extracted tissues
+# ^Destination(s) to store extracted tissues
+# The destination folder structure will be like:
+#   {tissues}/{image_stem}/{X}_{Y}.{suffix}
+# where
+#   tissues: "dst_1"
+#   image_stem: image file name without file extension
+#   X: top-left x coordinate of a tissue in level 0 (original resolution)
+#   Y: top-left y coordinate of a tissue in level 0 (original resolution)
+#   image_suffix: "image_suffix"
+# If "flattening" parameter is True, the structure and the file name will be:
+#   {tissues}/{image_stem}_{X}_{Y}.{suffix}
 
 target_magnification: !!float 10
-# Target magnification (typical values: 10, 20, 40)
+# ^Target magnification (typical values: 10, 20, 40)
 # For example, using 10 is 2x downsampling from 20X and 4x downsampling from 40X.
-# For debugging, set a smaller value for faster trial and error.
+# For a debugging stage, set a smaller value for faster trial and error.
+# To generate a thumbnail image, 0.5 is recommended.
 
 use_progress_bar: !!bool False
-# Set True if you want a fancy progress bar.
+# ^Set True if you want a fancy progress bar.
 
 #tissueloc_config:
    #max_img_size: !!int 4096 # default: 4096
    #smooth_sigma: !!int 13 # default: 13
    #thresh_val: !!float 0.80 # default: 0.80 (Recommended: 0.85)
    #min_tissue_size: !!int 10000 #default 10000
-# To override default tissueloc sparameters, uncomment `tissueloc_config` and
+#
+# ^To override default tissueloc sparameters, uncomment `tissueloc_config` and
 # corresponding parameters above.
-# Among those parameters, `thresh_val` is the most important parameter. If you choose smalle value
-# (e.g., 0.75), it tends to split a slide into small tissues. If you choose large value,
-# such as 1.0, it treats a whole slide as single tissue without any tissue detection,
-# which may be useful for making a thumbnail of each slide. Recommended value is 0.85,
-# but it depends on datasets and tasks.
+# Among those parameters, `thresh_val` is the most important parameter.
+# If you choose smalle value (e.g., 0.75), it tends to split a slide into small tissues.
+# If you choose large value, such as 1.0, it treats a whole slide as single tissue
+# without any tissue detection, which may be useful for making a thumbnail of each slide.
+# Recommended value is 0.85, but it depends on datasets and tasks.
+# 
 # Also `min_tissue_size` is another important parameter. For some slides with
 # small tissues, setting smaller value, such as 2000, would help.
 
-#""" Shared: Stage 1 & 2
-#"""
-num_workers: !!int 4
-# The number of threads. To enable multiprocess, set True for `multiprocess`.
-
 slide_extension: !!str svs
-# Choose either 'tif' or 'svs'.
+# ^Choose either 'tif' or 'svs'.
 
 opt1:
     - !!str ''
-# Wildcard options for future extension.
+# ^Wildcard options for future extension.
 # For example, current scripts use this field to specify a path when annotations
 # are stored in different folder.
+# By default, it contains empty string. If XML annotation files are stored in
+# different folder other than the slide folder, then you should set a path
+# for annotation folder here.
+# If 'src_1' has multiple folders, 'opt1' should have the same number of items too.
 
 action_no_xml: !!str raise
-# Choose an action for slides without annotation.
+# ^Choose an action for slides without annotation.
 # options are:
 #   raise: (default) raise an error. most conservative but best when slides must
 #         have corresponding annotation files.
@@ -56,40 +78,68 @@ action_no_xml: !!str raise
 #         Also pay attention to `extract_notannotated` parameter.
 
 use_userdefined_has_xml: !!bool False
-# Set True if you process DH annoation
+# ^Set True if you process DH annoation
 # (Use 0_match_files.py to validate the xml and svs match.)
 
+
+#""" Shared Parameters: Stage 1 & 2
+# Corresponding scrits:
+# - 0_match_files.py
+# - 1_extract_tissues.py
+# - 2_extract_patches.py
+#"""
+num_workers: !!int 4
+# ^The number of threads. To enable multiprocess, set True for `multiprocess`.
+
 multiprocess: !!bool False
-# Set True to enable multiprocessing (be careful, MT doesn't show error messages if any)
+# ^Set True to enable multiprocessing (Be careful, MP doesn't show error messages if any)
 
 image_suffix: !!str png
-# File extension of tissues and patches
+# ^File extension of tissues and patches
 
+flattening: !!str False
+# ^Set True if you want to generate all the images in a single folder rather
+# than creating a sub folder for each slide image.
+# This will affect patch destination too.
 
-#""" Stage 2: Patch Extraction
+#""" Stage 2 Parameters: Patch Extraction
+# Corresponding scrits:
+# - 2_extract_patches.py
 #"""
 src_2:
     - !!str ./tissues
+# ^Source folder(s) containing extracted tissues
 # Typically this should be the same as dst_1
 
 dst_2:
     - !!str ./patches
+# ^Destination(s) to store extracted patches
+# If "flattening" parameter is True, the structure and the file name will be:
+#   {patches}/{image_stem}_{X}_{Y}_{I}_{J}.{suffix}
+# where
+#   patches: "dst_2"
+#   image_stem: original slide image's file name without file extension
+#   X: top-left x coordinate of a tissue in level 0 (original resolution)
+#   Y: top-left y coordinate of a tissue in level 0 (original resolution)
+#   I: column index of the patch in a tissue
+#   J: row index of the patch in a tissue
+#   image_suffix: "image_suffix"
 
 window_size: !!int 224
-# Patch size (both height and width)
+# ^Patch size (both height and width)
 
 overlap_factor: !!float 0.333
-# Extract overlapping patches.
+# ^Extract overlapping patches.
 # For example, 0 for no overlap, 0.333 for 1/3 overlap
 
 tissue_threshold: !!float 0.7
-# A patch with at least this ratio threshold is extracted.
+# ^A patch with at least this ratio threshold is extracted.
 # For example, 0.7 means at least 70% area of a patch should have be tissues.
 # The tissue/background detection is done with tissueloc in the first stage.
 
 
 extract_notannotated: !!bool False
-# Extract patches without annotation
+# ^Extract patches without annotation
 # Useful for extracting negative/normal patches.
 
 

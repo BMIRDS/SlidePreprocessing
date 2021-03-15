@@ -15,7 +15,7 @@ Outputs small patches extracted from those tissues
 
 # Modified from utils_dataset to use mask
 def extract_patches(img: Image, img_mask: Image, window_size: int = 224,
-                    overlap_factor: float = 1/3, tissue_threshold=0.7,
+                    overlap_factor: float = 1/3, tissue_threshold = 0.7,
                     xmlpath: str = None):
     """
     
@@ -83,7 +83,8 @@ def extract_patches(img: Image, img_mask: Image, window_size: int = 224,
 
 
 def save_patches(slide_name: str, tissues, dst_path: Path,
-                 extraction_config, extract_notannotated: bool = False):
+                 extraction_config, extract_notannotated: bool = False,
+                 flattening: bool = False):
     """Wrapper function for extract_patches,
     to extract patches from tissues on a slide.
 
@@ -92,9 +93,18 @@ def save_patches(slide_name: str, tissues, dst_path: Path,
             window_size (default: 224)
             overlap_factor (default: 1/3)
             tissue_threshold (default: 0.7)
+    flattening: bool
+        generate all the images in a single folder rather than creating a sub folder for each slide image.
     """
-    slide_dst = dst_path / slide_name
+    if flattening:
+        slide_dst = dst_path
+    else:
+        slide_dst = dst_path / slide_name
     slide_dst.mkdir(parents=True, exist_ok=True)
+    patch_dst_template = slide_dst / (
+        "{annotation}/{stem}_{i}_{j}.{suffix}")
+
+
     for p, p_mask, p_xml in tissues:
         img = Image.open(p)
         img_mask = Image.open(p_mask)
@@ -113,8 +123,12 @@ def save_patches(slide_name: str, tissues, dst_path: Path,
             if annotation == 'NotAnnotated' and not extract_notannotated:
                 continue
             (slide_dst / annotation).mkdir(parents=True, exist_ok=True)
-            patch_dst = slide_dst / annotation / (
-                p.stem + f"_{pos[0]}_{pos[1]}" + p.suffix)
+            patch_dst = str(patch_dst_template).format(
+                annotation=annotation,
+                stem=p.stem,
+                i=pos[0],
+                j=pos[1],
+                suffix=p.suffix)
             patch.save(patch_dst)
 
 
@@ -127,6 +141,7 @@ if __name__ == '__main__':
     num_workers = config.num_workers
     use_progress_bar = config.use_progress_bar
     image_suffix = config.image_suffix
+    flattening = config.flattening
     opts = [{'xml_root': opt1} for opt1 in config.opt1]  # placeholder for possible extension
     window_size = config.window_size
     overlap_factor = config.overlap_factor
@@ -146,7 +161,10 @@ if __name__ == '__main__':
             p_mask = p.with_name(
                 f'{p.stem}_mask').with_suffix(f'.{image_suffix}')
             if p_mask.exists():
-                slide_name = p.parent.name
+                if flattening:
+                    slide_name = p.stem
+                else:
+                    slide_name = p.parent.name
                 pairs[slide_name].append(
                     (p, p_mask, has_xml(p, image_suffix)))
         if not config.multiprocess:
@@ -159,7 +177,8 @@ if __name__ == '__main__':
                     tissues = tissues,
                     dst_path = dp,
                     extraction_config=extraction_config,
-                    extract_notannotated=extract_notannotated,)
+                    extract_notannotated=extract_notannotated,
+                    flattening=flattening)
         else:
             """ Multi-threading
             """
@@ -174,6 +193,7 @@ if __name__ == '__main__':
                                 'dst_path': dp,
                                 'extraction_config': extraction_config,
                                 'extract_notannotated': extract_notannotated,
+                                'flattening': flattening
                                 }
                             )
             pool.close()
