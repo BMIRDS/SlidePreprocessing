@@ -97,7 +97,7 @@ multiprocess: !!bool False
 image_suffix: !!str png
 # ^File extension of tissues and patches
 
-flattening: !!str False
+flattening: !!bool False
 # ^Set True if you want to generate all the images in a single folder rather
 # than creating a sub folder for each slide image.
 # This will affect patch destination too.

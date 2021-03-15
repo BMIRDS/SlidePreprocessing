@@ -39,7 +39,7 @@ use_userdefined_has_xml: !!bool False
 num_workers: !!int 4
 multiprocess: !!bool False
 image_suffix: !!str png
-flattening: !!str False
+flattening: !!bool False
 
 
 #""" Stage 2 Parameters: Patch Extraction

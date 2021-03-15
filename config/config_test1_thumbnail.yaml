@@ -36,4 +36,4 @@ use_userdefined_has_xml: !!bool False
 num_workers: !!int 4
 multiprocess: !!bool False
 image_suffix: !!str png
-flattening: !!str True
+flattening: !!bool True

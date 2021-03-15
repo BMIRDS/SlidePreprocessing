@@ -16,7 +16,7 @@ Author: Naofumi
 - "flattening" parameter
     - Added in config file
     - Purpose: toggle this to specify the output folder structure. With 'flattening' True, all the extracted tissues are stored in the same folder, which is useful when generating thumbnail images and wanting to see all the images without traversing folders. This also affect folders for patches; all the patches are stored in each folder that corresponds to a class.
-    - How to make a previous config file compatible: add "flattening: !!str False" line in config (yaml) file. See [Template file](config/config_template.yaml).
+    - How to make a previous config file compatible: add "flattening: !!bool False" line in config (yaml) file. See [Template file](config/config_template.yaml).
 
 
 ## How to run for your dataset
