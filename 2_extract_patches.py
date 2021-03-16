@@ -102,7 +102,7 @@ def save_patches(slide_name: str, tissues, dst_path: Path,
         slide_dst = dst_path / slide_name
     slide_dst.mkdir(parents=True, exist_ok=True)
     patch_dst_template = slide_dst / (
-        "{annotation}/{stem}_{i}_{j}.{suffix}")
+        "{annotation}/{stem}_{i}_{j}{suffix}")
 
 
     for p, p_mask, p_xml in tissues:
