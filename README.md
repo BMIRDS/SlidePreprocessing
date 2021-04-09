@@ -86,6 +86,14 @@ $ pip install pillow
 
 ### openslide
 ```
+$ pip install openslide-python
+```
+
+### openslide (alternative installation)
+
+Please use this installation via bioconda channel below if you encounter any issue with the pip-based installation above. (Known dependency: python=3.6).
+
+```
 $ conda install -c bioconda openslide-python
 $ conda install libiconv
 $ pip install scipy
@@ -113,7 +121,13 @@ $ conda install shapely
 $ pip install pyyaml
 ```
 
-### Trouble Shooting
+### miniutils (optional)
+```
+
+$ pip install miniutils
+```
+
+## Trouble Shooting
 - Q: What is "NonAnnotated" folder?
 - A: A patch that does not overlap with any ROI annotation is moved to "NonAnnotated" folder. If out-of-ROI regions are normal tissues, then this folder should contain normal tissues, but please make sure if this is true with the original annotators.
 
