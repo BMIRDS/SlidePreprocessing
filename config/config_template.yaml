@@ -36,6 +36,7 @@ target_magnification: !!float 10
 
 use_progress_bar: !!bool False
 # ^Set True if you want a fancy progress bar.
+# Dependency: `$ pip install miniutils`
 
 #tissueloc_config:
    #max_img_size: !!int 4096 # default: 4096

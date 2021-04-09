@@ -1,5 +1,6 @@
 import os
 import numpy
+import traceback
 from PIL import Image
 from pathlib import Path
 from multiprocessing import Pool
@@ -10,6 +11,7 @@ Image.MAX_IMAGE_PIXELS = None
 from openslide import OpenSlide
 import cv2
 import tissueloc
+import openslide
 
 from annotation import (
     load_xml, create_polygon, create_tree, append_tree, overlay_annotation, prettify)
@@ -57,14 +59,21 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
         ,which are top-left coords of extracted image at level0.
 
     """
-    cnts, d_factor = tissueloc.locate_tissue_cnts(
-        filepath,
-        max_img_size=tissueloc_config.get('max_img_size', 2048*2),
-        smooth_sigma=tissueloc_config.get('smooth_sigma', 13),
-        thresh_val=tissueloc_config.get('thresh_val', 0.80),
-        min_tissue_size=tissueloc_config.get('min_tissue_size', 10000))
-
+    print(f"[info] Processing slide: {filepath}, xml: {xmlpath}")
+    try:
+        cnts, d_factor = tissueloc.locate_tissue_cnts(
+            filepath,
+            max_img_size=tissueloc_config.get('max_img_size', 2048*2),
+            smooth_sigma=tissueloc_config.get('smooth_sigma', 13),
+            thresh_val=tissueloc_config.get('thresh_val', 0.80),
+            min_tissue_size=tissueloc_config.get('min_tissue_size', 10000))
+    except openslide.lowlevel.OpenSlideError as e:
+        # print(traceback.print_exc())
+        print(f"[error] Extraction failed and thus skipped: {filepath} is not be compatible with openslide.",
+            "(Recommendation: ignore this slide; such files are not multi-level and/or do not have objective-power value).")
+        return False
     slide = OpenSlide(filepath)
+
     stem = Path(filepath).stem
 
     if flattening:
@@ -85,9 +94,9 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
         dest_mask_path_template = dest_root_path / "{minx}_{miny}_mask.{image_suffix}"
         new_xml_file_template = dest_root_path / '{minx}_{miny}.xml'
     if len(cnts) == 0:
-        print(f"No tissue found: Skipping {filepath}. "
+        print(f"[error] No tissue found: Skipping {filepath}. "
             "Reduce min_tissue_size parameter may help locating small tissues.")
-        return
+        return False
 
     results = compute_magnification(slide, target_magnification)
     original_magnification = results.get('original_magnification')
@@ -114,6 +123,7 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
             location=(minx, miny),
             size=(size_x_at_target_level, size_y_at_target_level),  # size at target level
             level=target_level)
+
         image = img.convert('RGB')
         image = image.resize(
             (size_x_at_target_magnification, size_y_at_target_magnification))
@@ -185,7 +195,7 @@ if __name__ == '__main__':
         tissueloc_config = dict()
 
     assert len(src) == len(dst),\
-        "The number of source and destination folders does not match. "\
+        "[error] The number of source and destination folders does not match. "\
         "Double check \"src_1\" and \"dst_1\" parameters in the config file."
     
     opts = [{'xml_root': opt1} for opt1 in config.opt1]  # placeholder for possible extension
@@ -199,7 +209,7 @@ if __name__ == '__main__':
             # Non trivial "xml_root" is set, and thus auto-expanding is risky so
             # raising an error for manual fix
             assert len(src) == len(opts),\
-            "The number of source folders and options does not match. "\
+            "[error] The number of source folders and options does not match. "\
             "Double check \"src_1\" and \"opt1\" parameters in the config file."
 
     action_no_xml = config.action_no_xml
@@ -218,11 +228,12 @@ if __name__ == '__main__':
             # dependency: nose
 
         except ImportError as e:
-            print("Progress bar not available: {e}")
+            print("[warning] Progress bar not available: {e}")
             progress_bar_available = False
 
-    """Single threading for debugging"""   
+    """Single Process Mode for debugging"""
     if not config.multiprocess:
+        print("[info] Mode: Single Process")
         for sp, op, dp in zip(src, opts, dst):
             entries = list(Path(sp).rglob(f"*.{slide_extension}"))
             xmls = [has_xml(e, slide_extension, op) for e in entries]
@@ -231,11 +242,12 @@ if __name__ == '__main__':
                     if action_no_xml == 'skip':
                         continue
                     elif action_no_xml == 'raise':
-                        raise Exception(f"No corresponding XML file for {slidepath}. "
-                            "If this is expected, set skip_slide_wo_xml to True."
-                            "Otherwise check file name and update has_xml_user"
-                            "function to locate the XML file.") 
-                print("Processing ", slidepath, xmlpath)
+                        raise Exception(f"[error] No corresponding XML file for \'{slidepath}\'. "
+                            "If this is expected, set \'action_no_xml\' to \'skip\' or \'process\'' in a config file. "
+                            "Otherwise, check the filename of an XML file and "
+                            "update \'has_xml_user\' function to locate the XML file. "
+                            "Running \'0_match_files.py\' helps to tell if "
+                            "the slide-xml pair is located.") 
                 extract_tissues(
                         filepath=str(slidepath.absolute()),
                         destdir=dp,
@@ -246,8 +258,9 @@ if __name__ == '__main__':
                         flattening=flattening)
         exit()
 
-    """ Multi-threading"""
+    """ Multi-Process"""
     for sp, op, dp in zip(src, opts, dst):
+        print(f"[info] Mode: Multi-Process x{num_workers}")
         if progress_bar_available:
             entries = list(Path(sp).rglob(f"*.{slide_extension}"))
             xmls = [has_xml(e, slide_extension, op) for e in entries]
@@ -257,7 +270,7 @@ if __name__ == '__main__':
                     entries_xmls = [(ex) for ex in zip(entries, xmls) if ex[1]]
                     entries, xmls = zip(*entries_xmls)
                 elif action_no_xml == 'raise':
-                    raise Exception(f"No corresponding XML file for {slidepath}. "
+                    raise Exception(f"[error] No corresponding XML file for {slidepath}. "
                         "If this is expected, set skip_slide_wo_xml to True."
                         "Otherwise check file name and update has_xml_user"
                         "function to locate the XML file.") 
@@ -274,19 +287,20 @@ if __name__ == '__main__':
                 nprocs=num_workers, total=len(entries))
         else:
             pool = Pool(num_workers)
+            results = []
             for e in Path(sp).rglob(f"*.{slide_extension}"):
                 xmlpath = has_xml(e, slide_extension, op)
                 if xmlpath is None:
                     if action_no_xml == 'skip':
                         continue
                     elif action_no_xml == 'raise':
-                        raise Exception(f"No corresponding XML file for {e}. "
+                        raise Exception(f"[error] No corresponding XML file for {e}. "
                             "If this is expected, set skip_slide_wo_xml to True."
                             "Otherwise check file name and update has_xml_user"
                             "function to locate the XML file.") 
                 if xmlpath is not None:
                     xmlpath = str(xmlpath.absolute())
-                pool.apply_async(
+                x = pool.apply_async(
                     extract_tissues,
                     args=[],
                     kwds={
@@ -299,5 +313,9 @@ if __name__ == '__main__':
                         'flattening': flattening,
                         }
                     )
+                results.append(x)
+
             pool.close()
+            for result in results:
+                result.get()
             pool.join()
