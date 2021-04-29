@@ -2,6 +2,16 @@
 
 Author: Naofumi
 
+<br>
+
+## Table of Contents
+### [Functionalities: overview](#functionalities)
+### [How to run for your dataset: config & yaml](#how-to-run-for-your-dataset)
+### [Setup: pip & conda](#setup)
+### [Trouble Shooting](#trouble-shooting)
+
+<br>
+
 ## Functionalities
 ### Match slides and corresponding annotation files
 [0_match_files.py](0_match_files.py)
@@ -22,6 +32,7 @@ Author: Naofumi
     - Purpose: Set this parameter True to avoid creating a folder for each class. This scenario is useful when your task is to apply unsupervised learning on slides without ROI annotation.
     - How to make a previous config file compatible: add "ignore_class: !!bool False" line in config (yaml) file. See [Template file](config/config_template.yaml)
 
+<br>
 
 ## How to run for your dataset
 ### Config file
@@ -74,6 +85,7 @@ or
 $ python 1_extract_tissues.py --config config_test1_thumbnail.yaml
 ```
 
+<br>
 
 ## Setup
 ### Conda environment (optional but recommended)
@@ -130,6 +142,8 @@ $ pip install pyyaml
 
 $ pip install miniutils
 ```
+
+<br>
 
 ## Trouble Shooting
 - Q: What is "NonAnnotated" folder?
