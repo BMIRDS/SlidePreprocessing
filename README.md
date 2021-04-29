@@ -60,6 +60,7 @@ If slides do not have annotations, and you still want to extract all the crops, 
 
 - `action_no_xml` to `process`
 - `extract_notannotated` to `True`
+- `ignore_class` to `True`
 
 If you simply want to skip unannotated slides, set `action_no_xml` to `skip`.
 
@@ -136,9 +137,7 @@ $ pip install miniutils
 - A: A patch that does not overlap with any ROI annotation is moved to "NonAnnotated" folder. If out-of-ROI regions are normal tissues, then this folder should contain normal tissues, but please make sure if this is true with the original annotators.
 
 - Q: All the patches are classified as "NonAnnotated", although there is a corresponding XML file for a slide. Why?
-- A: It happens when the 1) magnification is too low, 2) the ROI is too small and/or 3) stride is too large, thus a patch could not contain enough positive area. The default "tissue_threshold" parameter requires 70% overlap with ROI to consider a patch as a class. You can also lower the parameter at the cost of non-positive tissue noise introduced in a patch.
+- A: It happens when the 1) magnification is too low, 2) the ROI is too small and/or 3) stride is too large; thus a patch could not contain enough positive area. The default "tissue_threshold" parameter requires 70% overlap with ROI to consider a patch as a class. You can also lower the parameter at the cost of non-positive tissue noise introduced in a patch.
 
 - Q: There is no patches in "NonAnnotated" folder for a slide. Does this mean all the patches belong to certain classes and no normal tissues?
-- A: That's possible. Please double-check if that is true by opening the slide and a corresponding XML file in ASAP or generating a thimbnail image with ROI overlay.
-
-
+- A: That's possible. Please double-check if that is true by opening the slide and a corresponding XML file in ASAP or generating a thumbnail image with ROI overlay. See [Thumbnails section.](#thumbnails)
