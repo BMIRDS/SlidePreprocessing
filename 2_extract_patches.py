@@ -84,7 +84,7 @@ def extract_patches(img: Image, img_mask: Image, window_size: int = 224,
 
 def save_patches(slide_name: str, tissues, dst_path: Path,
                  extraction_config, extract_notannotated: bool = False,
-                 flattening: bool = False):
+                 flattening: bool = False, ignore_class: bool = False):
     """Wrapper function for extract_patches,
     to extract patches from tissues on a slide.
 
@@ -101,8 +101,12 @@ def save_patches(slide_name: str, tissues, dst_path: Path,
     else:
         slide_dst = dst_path / slide_name
     slide_dst.mkdir(parents=True, exist_ok=True)
-    patch_dst_template = slide_dst / (
-        "{annotation}/{stem}_{i}_{j}{suffix}")
+    if ignore_class:
+        patch_dst_template = slide_dst / (
+            "{stem}_{i}_{j}{suffix}")
+    else:
+        patch_dst_template = slide_dst / (
+            "{annotation}/{stem}_{i}_{j}{suffix}")
 
 
     for p, p_mask, p_xml in tissues:
@@ -122,13 +126,20 @@ def save_patches(slide_name: str, tissues, dst_path: Path,
             """
             if annotation == 'NotAnnotated' and not extract_notannotated:
                 continue
-            (slide_dst / annotation).mkdir(parents=True, exist_ok=True)
-            patch_dst = str(patch_dst_template).format(
-                annotation=annotation,
-                stem=p.stem,
-                i=pos[0],
-                j=pos[1],
-                suffix=p.suffix)
+            if ignore_class:
+                patch_dst = str(patch_dst_template).format(
+                    stem=p.stem,
+                    i=pos[0],
+                    j=pos[1],
+                    suffix=p.suffix)
+            else:
+                (slide_dst / annotation).mkdir(parents=True, exist_ok=True)
+                patch_dst = str(patch_dst_template).format(
+                    annotation=annotation,
+                    stem=p.stem,
+                    i=pos[0],
+                    j=pos[1],
+                    suffix=p.suffix)
             patch.save(patch_dst)
 
 
@@ -142,6 +153,7 @@ if __name__ == '__main__':
     use_progress_bar = config.use_progress_bar
     image_suffix = config.image_suffix
     flattening = config.flattening
+    ignore_class = config.ignore_class
     opts = [{'xml_root': opt1} for opt1 in config.opt1]  # placeholder for possible extension
     window_size = config.window_size
     overlap_factor = config.overlap_factor
@@ -178,7 +190,8 @@ if __name__ == '__main__':
                     dst_path = dp,
                     extraction_config=extraction_config,
                     extract_notannotated=extract_notannotated,
-                    flattening=flattening)
+                    flattening=flattening,
+                    ignore_class=ignore_class)
         else:
             """ Multi-threading
             """
@@ -193,7 +206,8 @@ if __name__ == '__main__':
                                 'dst_path': dp,
                                 'extraction_config': extraction_config,
                                 'extract_notannotated': extract_notannotated,
-                                'flattening': flattening
+                                'flattening': flattening,
+                                'ignore_class': ignore_class
                                 }
                             )
             pool.close()

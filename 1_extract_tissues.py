@@ -228,7 +228,7 @@ if __name__ == '__main__':
             # dependency: nose
 
         except ImportError as e:
-            print("[warning] Progress bar not available: {e}")
+            print(f"[warning] Progress bar not available: {e}")
             progress_bar_available = False
 
     """Single Process Mode for debugging"""
@@ -240,6 +240,7 @@ if __name__ == '__main__':
             for slidepath, xmlpath in zip(entries, xmls):
                 if xmlpath is None:
                     if action_no_xml == 'skip':
+                        print(f"[info] Skipping slide: {filepath} for no xml (see \'action_no_xml\'')")
                         continue
                     elif action_no_xml == 'raise':
                         raise Exception(f"[error] No corresponding XML file for \'{slidepath}\'. "

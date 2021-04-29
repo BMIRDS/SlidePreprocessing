@@ -18,22 +18,11 @@ target_magnification: !!float 10
 
 use_progress_bar: !!bool False
 
-#tissueloc_config:
-   #max_img_size: !!int 4096 # default: 4096
-   #smooth_sigma: !!int 13 # default: 13
-   #thresh_val: !!float 0.80 # default: 0.80 (Recommended: 0.85)
-   #min_tissue_size: !!int 10000 #default 10000
-#
-# ^To override default tissueloc sparameters, uncomment `tissueloc_config` and
-# corresponding parameters above.
-# Among those parameters, `thresh_val` is the most important parameter.
-# If you choose smalle value (e.g., 0.75), it tends to split a slide into small tissues.
-# If you choose large value, such as 1.0, it treats a whole slide as single tissue
-# without any tissue detection, which may be useful for making a thumbnail of each slide.
-# Recommended value is 0.85, but it depends on datasets and tasks.
-# 
-# Also `min_tissue_size` is another important parameter. For some slides with
-# small tissues, setting smaller value, such as 2000, would help.
+tissueloc_config:
+   max_img_size: !!int 4096 # default: 4096
+   smooth_sigma: !!int 13 # default: 13
+   thresh_val: !!float 0.80 # default: 0.80 (Recommended: 0.85)
+   min_tissue_size: !!int 10000 #default 10000
 
 slide_extension: !!str tif
 opt1:
@@ -67,3 +56,4 @@ window_size: !!int 256
 overlap_factor: !!float 0.333
 tissue_threshold: !!float 0.7
 extract_notannotated: !!bool True
+ignore_class: !!bool False

@@ -1,4 +1,5 @@
 # Use Case: Generate thumbnail images of slides.
+# BY SETTING thresh_val TO 1.0
 
 
 #""" Stage 1 Parameters: Tissue Extraction
@@ -15,10 +16,10 @@ dst_1:
 target_magnification: !!float 0.5
 use_progress_bar: !!bool False
 tissueloc_config:
-   #max_img_size: !!int 4096 # default: 4096
-   #smooth_sigma: !!int 13 # default: 13
-   thresh_val: !!float 1.0
-   #min_tissue_size: !!int 10000 #default 10000
+   max_img_size: !!int 4096 # default: 4096
+   smooth_sigma: !!int 13 # default: 13
+   thresh_val: !!float 1.0  # default: 0.80
+   min_tissue_size: !!int 10000 #default 10000
 
 slide_extension: !!str tif
 opt1:
@@ -37,3 +38,4 @@ num_workers: !!int 4
 multiprocess: !!bool False
 image_suffix: !!str png
 flattening: !!bool True
+ignore_class: !!bool False

@@ -1,7 +1,9 @@
 # Test case 3: Only slides. No corresponding xmls.
 #     Setting 'action_no_xml' parameter is important;
-#     Use 'process' to avoid raising Exception.
-#     Use 'skip' to ignore slides w/o xmls and process only slides that has xmls.
+#     - Use 'process' to avoid raising Exception.
+#     - Use 'skip' to ignore slides w/o xmls and process only slides that has xmls.
+#     Also, in this example, 'ignore_class' is turned on to avoid creating
+#     'NotAnnotated' class folders.
 # Images and annotation files used in this test can be downloaded from
 # [CAMELYON sample](https://www.dropbox.com/s/fegzxxsfycy1shf/testdata.zip?dl=0) (2.7GB).
 
@@ -20,11 +22,11 @@ dst_1:
 target_magnification: !!float 10
 use_progress_bar: !!bool False
 
-#tissueloc_config:
-   #max_img_size: !!int 4096 # default: 4096
-   #smooth_sigma: !!int 13 # default: 13
-   #thresh_val: !!float 0.80 # default: 0.80 (Recommended: 0.85)
-   #min_tissue_size: !!int 10000 #default 10000
+tissueloc_config:
+   max_img_size: !!int 4096 # default: 4096
+   smooth_sigma: !!int 13 # default: 13
+   thresh_val: !!float 0.80 # default: 0.80 (Recommended: 0.85)
+   min_tissue_size: !!int 10000 #default 10000
 
 slide_extension: !!str tif
 opt1:
@@ -65,3 +67,4 @@ window_size: !!int 256
 overlap_factor: !!float 0.333
 tissue_threshold: !!float 0.7
 extract_notannotated: !!bool True
+ignore_class: !!bool True
