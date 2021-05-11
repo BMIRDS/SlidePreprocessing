@@ -1,3 +1,4 @@
+import csv
 import os
 import numpy
 import traceback
@@ -58,6 +59,12 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
         miny
         ,which are top-left coords of extracted image at level0.
 
+    As a biproduct, a csv file is also generated to store the details of
+    extracted tissues. The csv file is created where the tissue images are stored.
+        CSV: <slidename>.csv
+        tissue_filename | original_left | original_top | original_right
+         | original_bottom | original_magnification | donwsampling_factor
+
     """
     print(f"[info] Processing slide: {filepath}, xml: {xmlpath}")
     try:
@@ -104,6 +111,11 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
     ds_from_target_level = results.get('donwsampling_factor')
     ds_at_target_level = int(slide.level_downsamples[target_level])
     ds_from_level0 = ds_at_target_level * ds_from_target_level
+
+    rows = list()  # cache tissue info
+    rows.append([
+        'tissue_filename', 'original_left', 'original_top', 'original_right',
+        'original_bottom', 'original_magnification', 'donwsampling_factor'])
 
     for i, cnt in enumerate(cnts):
         cnt *= d_factor  # Scale back contours To original scale
@@ -175,6 +187,13 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
                     image_path=dest_path,
                     xml_path=new_xml_file,
                     image_suffix=image_suffix)
+        rows.append([
+            str(dest_path), str(minx), str(miny), str(maxx), str(maxy),
+            str(original_magnification), str(ds_from_level0)])
+
+    with open(dest_root_path/f"{stem}.csv", 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(rows)
 
 
 if __name__ == '__main__':
