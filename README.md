@@ -6,6 +6,7 @@ Author: Naofumi
 
 ## Table of Contents
 ### [Functionalities: overview](#functionalities)
+### [Recent Changes](#changelog)
 ### [How to run for your dataset: config & yaml](#how-to-run-for-your-dataset)
 ### [Setup: pip & conda](#setup)
 ### [Trouble Shooting](#trouble-shooting)
@@ -22,7 +23,20 @@ Author: Naofumi
 ### Extract patches from tissues
 [2_extract_patches.py](2_extract_patches.py)
 
-## Recent Backward Incompatible Changes
+## Changelog
+### Logging Tissue Extraction
+Tissue extraction also generate a log in csv file where you can keep track of the coordinates of tissues and a change in magnification. The columns are:
+- tissue_filename
+- original_left
+- original_top
+- original_right
+- original_bottom
+- original_magnification
+- donwsampling_factor
+
+With these information, patch size, overlapping factor, and patch indices (from patch's file name), you can recover the exact coordinate of each patch in the original slide.
+
+### Backward-Incompatible Changes
 - "csv_as_data_source" parameter
     - Added in config file
     - Purpose: Set this True to feed a list of slide files in CSV format, instead of a directory path. This gives more flexibility in source folder structures, especially when only a subset of slides in a folder is to be processed. You can also set a nickname for a slide, which can be used for a destination folder name of the slide. (Default is to use a slide file name without file extension (i.e., stem)). This feature is useful when the original file name is too long, e.g. "TCGA-A3-A8OU-01Z-00-DX1.5BF363CE-9DB1-40BB-9E77-CF930F12B1B8.svs". Please see [config_test4.yaml](config/config_test4.yaml) for the specification of a CSV file.
