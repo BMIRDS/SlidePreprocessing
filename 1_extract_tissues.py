@@ -20,7 +20,8 @@ from microscope import compute_magnification
 
 def extract_tissues(filepath: str, destdir: str, target_magnification: float,
                     image_suffix: str, xmlpath: str = None,
-                    tissueloc_config: dict = dict(), flattening = False):
+                    tissueloc_config: dict = dict(),
+                    flattening = False, nickname=None):
     """
     Args:
         filepath: str
@@ -54,6 +55,9 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
                     https://github.com/PingjunChen/tissueloc/blob/master/tissueloc/locate_tissue.py
         flattening: bool
             generate all the images in a single folder rather than creating a sub folder for each slide image.
+        nickname: str
+            custom name for the input slide, which can be used for the destination directory
+            name. If this is not set, the stem of the slide is used.
     Generated files has the following in file name:
         minx
         miny
@@ -81,7 +85,10 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
         return False
     slide = OpenSlide(filepath)
 
-    stem = Path(filepath).stem
+    if nickname:
+        stem = nickname
+    else:
+        stem = Path(filepath).stem
 
     if flattening:
         dest_root_path = Path(destdir)
@@ -195,6 +202,56 @@ def extract_tissues(filepath: str, destdir: str, target_magnification: float,
         writer = csv.writer(f)
         writer.writerows(rows)
 
+def path_parser(src, opts, dst, csv_as_data_source=False):
+    """
+    Return:
+        a list of [(slideid, slidepath, xmlpath, destdir), ]
+        which is a nested list; outer list is for multiple datasource, and
+        inner list is for each slide.
+    """
+    results = list()
+    for sp, op, dp in zip(src, opts, dst):
+        paths = list()
+
+        if csv_as_data_source:
+            with open(sp, newline='') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+                for i, row in enumerate(reader):
+                    if len(row) == 2:
+                        # no xml
+                        slideid, slidepath = row
+                        xmlpath = None
+                    elif len(row) == 3:
+                        # has xml path
+                        slideid, slidepath, xmlpath = row
+                    else:
+                        raise Exception(f"[error] The source CSV file {sp} is il-formed. "
+                            "Please make sure if the file have either two or three columns.")
+                    if not slideid:
+                        # slideid cell is empty, so use file name as id
+                        slideid = Path(slidepath).stem
+                    paths.append((slideid, slidepath, xmlpath, dp))
+
+        else:
+            entries = list(Path(sp).rglob(f"*.{slide_extension}"))
+            xmls = [has_xml(e, slide_extension, op) for e in entries]
+            for slidepath, xmlpath in zip(entries, xmls):
+                if xmlpath is None:
+                    if action_no_xml == 'skip':
+                        print(f"[info] Skipping slide: {slidepath} for no xml (see \'action_no_xml\'')")
+                        continue
+                    elif action_no_xml == 'raise':
+                        raise Exception(f"[error] No corresponding XML file for \'{slidepath}\'. "
+                            "If this is expected, set \'action_no_xml\' to \'skip\' or \'process\'' in a config file. "
+                            "Otherwise, check the filename of an XML file and "
+                            "update \'has_xml_user\' function to locate the XML file. "
+                            "Running \'0_match_files.py\' helps to tell if "
+                            "the slide-xml pair is located.") 
+                slideid = path(slidepath).stem
+                paths.append((slideid, slidepath, xmlpath, dp))
+        results.append(paths)
+    return results
+
 
 if __name__ == '__main__':
     # LOADING CONFIG
@@ -213,15 +270,16 @@ if __name__ == '__main__':
     else:
         tissueloc_config = dict()
 
+    csv_as_data_source = hasattr(config, 'csv_as_data_source') and config.csv_as_data_source
+
     assert len(src) == len(dst),\
         "[error] The number of source and destination folders does not match. "\
         "Double check \"src_1\" and \"dst_1\" parameters in the config file."
     
     opts = [{'xml_root': opt1} for opt1 in config.opt1]  # placeholder for possible extension
-
     if len(src) != len(opts):
         # Validating parameters
-        if len(opts) == 1 and opts[0]['xml_root'] == None:
+        if len(opts) == 1 and not opts[0]['xml_root']:
             # Auto-expanding a trivial option parameter
             opts = opts*len(src)
         else:
@@ -250,87 +308,61 @@ if __name__ == '__main__':
             print(f"[warning] Progress bar not available: {e}")
             progress_bar_available = False
 
+
+    paths_sources = path_parser(src, opts, dst, csv_as_data_source=csv_as_data_source)
+
     """Single Process Mode for debugging"""
     if not config.multiprocess:
         print("[info] Mode: Single Process")
-        for sp, op, dp in zip(src, opts, dst):
-            entries = list(Path(sp).rglob(f"*.{slide_extension}"))
-            xmls = [has_xml(e, slide_extension, op) for e in entries]
-            for slidepath, xmlpath in zip(entries, xmls):
-                if xmlpath is None:
-                    if action_no_xml == 'skip':
-                        print(f"[info] Skipping slide: {filepath} for no xml (see \'action_no_xml\'')")
-                        continue
-                    elif action_no_xml == 'raise':
-                        raise Exception(f"[error] No corresponding XML file for \'{slidepath}\'. "
-                            "If this is expected, set \'action_no_xml\' to \'skip\' or \'process\'' in a config file. "
-                            "Otherwise, check the filename of an XML file and "
-                            "update \'has_xml_user\' function to locate the XML file. "
-                            "Running \'0_match_files.py\' helps to tell if "
-                            "the slide-xml pair is located.") 
+        for paths in paths_sources:  # each data source
+            for slideid, slidepath, xmlpath, destdir in paths:
                 extract_tissues(
-                        filepath=str(slidepath.absolute()),
-                        destdir=dp,
+                        filepath=str(Path(slidepath).absolute()),
+                        destdir=destdir,
                         target_magnification=target_magnification,
                         image_suffix=image_suffix,
                         xmlpath=xmlpath,
                         tissueloc_config=tissueloc_config,
-                        flattening=flattening)
+                        flattening=flattening,
+                        nickname=slideid)
+
         exit()
 
     """ Multi-Process"""
-    for sp, op, dp in zip(src, opts, dst):
+    for paths in paths_sources:  # each data source
         print(f"[info] Mode: Multi-Process x{num_workers}")
         if progress_bar_available:
-            entries = list(Path(sp).rglob(f"*.{slide_extension}"))
-            xmls = [has_xml(e, slide_extension, op) for e in entries]
-            if not all(xmls):
-                if action_no_xml == 'skip':
-                    # Removing slides with no xml file.
-                    entries_xmls = [(ex) for ex in zip(entries, xmls) if ex[1]]
-                    entries, xmls = zip(*entries_xmls)
-                elif action_no_xml == 'raise':
-                    raise Exception(f"[error] No corresponding XML file for {slidepath}. "
-                        "If this is expected, set skip_slide_wo_xml to True."
-                        "Otherwise check file name and update has_xml_user"
-                        "function to locate the XML file.") 
+            parallel_progbar(
+                mapper=lambda x: extract_tissues(
+                    filepath=str(Path(x[1]).absolute()),
+                    destdir=x[3],
+                    target_magnification=target_magnification,
+                    image_suffix=image_suffix,
+                    xmlpath=x[2],
+                    tissueloc_config=tissueloc_config,
+                    flattening=flattening,
+                    nickname=x[0]
+                    ),
+                    iterable=paths,
+                nprocs=num_workers, total=len(paths))
 
-            parallel_progbar(mapper=lambda x: extract_tissues(
-                filepath=str(x[0].absolute()),
-                destdir=dp,
-                target_magnification=target_magnification,
-                image_suffix=image_suffix,
-                xmlpath=x[1],
-                tissueloc_config=tissueloc_config,
-                flattening=flattening,
-                ), iterable=zip(entries, xmls),
-                nprocs=num_workers, total=len(entries))
+
         else:
             pool = Pool(num_workers)
             results = []
-            for e in Path(sp).rglob(f"*.{slide_extension}"):
-                xmlpath = has_xml(e, slide_extension, op)
-                if xmlpath is None:
-                    if action_no_xml == 'skip':
-                        continue
-                    elif action_no_xml == 'raise':
-                        raise Exception(f"[error] No corresponding XML file for {e}. "
-                            "If this is expected, set skip_slide_wo_xml to True."
-                            "Otherwise check file name and update has_xml_user"
-                            "function to locate the XML file.") 
-                if xmlpath is not None:
-                    xmlpath = str(xmlpath.absolute())
+            for slideid, slidepath, xmlpath, destdir in paths:
                 x = pool.apply_async(
                     extract_tissues,
                     args=[],
                     kwds={
-                        'filepath': str(e.absolute()),
-                        'destdir': dp,
+                        'filepath': str(Path(slidepath).absolute()),
+                        'destdir': destdir,
                         'target_magnification': target_magnification,
                         'image_suffix': image_suffix,
                         'xmlpath': xmlpath,
                         'tissueloc_config': tissueloc_config,
                         'flattening': flattening,
+                        'nickname': slideid
                         }
                     )
                 results.append(x)

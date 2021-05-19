@@ -13,6 +13,7 @@ src_1:
 dst_1:
 - !!str ./testdata/1_tissues_t1
 
+csv_as_data_source: !!bool False
 target_magnification: !!float 10
 use_progress_bar: !!bool False
 

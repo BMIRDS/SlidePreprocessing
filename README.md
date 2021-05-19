@@ -23,6 +23,10 @@ Author: Naofumi
 [2_extract_patches.py](2_extract_patches.py)
 
 ### Recent Backward Incompatible Changes
+- "csv_as_data_source" parameter
+    - Added in config file
+    - Purpose: Set this True to feed a list of slide files in CSV format, instead of a directory path. This gives more flexibility in source folder structures, especially when only a subset of slides in a folder is to be processed. You can also set a nickname for a slide, which can be used for a destination folder name of the slide. (Default is to use a slide file name without file extension (i.e., stem)). This feature is useful when the original file name is too long, e.g. "TCGA-A3-A8OU-01Z-00-DX1.5BF363CE-9DB1-40BB-9E77-CF930F12B1B8.svs". Please see [config_test4.yaml](config/config_test4.yaml) for the specification of a CSV file.
+    - How to make a previous config file compatible: add "csv_as_data_source: !!bool False" line in config (yaml) file. See [Template file](config/config_template.yaml).
 - "flattening" parameter
     - Added in config file
     - Purpose: toggle this to specify the output folder structure. With 'flattening' True, all the extracted tissues are stored in the same folder, which is useful when generating thumbnail images and wanting to see all the images without traversing folders. This also affect folders for patches; all the patches are stored in each folder that corresponds to a class.
@@ -38,15 +42,17 @@ Author: Naofumi
 ### Config file
 In general, you only need to make your own config.yaml file. [Template file](config/config_template.yaml) is available. This template file also explains each parameter.
 
-There are three use cases:
+There are four use cases:
 1. svs files and annotations are in the same directory.
 2. svs files and annotations are in different directories.
 3. only svs files are available.
+4. use a CSV file as input source.
 
 For each, please see a sample config files:
 1. [config_test1.yaml](config/config_test1.yaml)
 2. [config_test2.yaml](config/config_test2.yaml)
 3. [config_test3.yaml](config/config_test3.yaml)
+4. [config_test4.yaml](config/config_test4.yaml)
 
 You can run these tests using a [CAMELYON sample](https://www.dropbox.com/s/fegzxxsfycy1shf/testdata.zip?dl=0) (2.7GB). 
 
@@ -65,6 +71,7 @@ If it could not locate pairs for all the slides, use `has_xml_user` function in 
 
 If you use the `has_xml_user` function, please set True for `use_userdefined_has_xml` in config file.
 
+If you already have a list of slides and corresponding xml files, consider to use a CSV-based input. See: [config_test4.yaml](config/config_test4.yaml).
 
 ### No Annotations?
 If slides do not have annotations, and you still want to extract all the crops, please use the following options in config file:
@@ -155,3 +162,21 @@ $ pip install miniutils
 
 - Q: There is no patches in "NonAnnotated" folder for a slide. Does this mean all the patches belong to certain classes and no normal tissues?
 - A: That's possible. Please double-check if that is true by opening the slide and a corresponding XML file in ASAP or generating a thumbnail image with ROI overlay. See [Thumbnails section.](#thumbnails)
+
+- Q: How to control the output folder structure of tissues/patches?
+- A: Use 'flattening' and 'ignore_class' parameters. Example:
+```
+flattening(True) & ignore_class(True)
+     = All the patches are extracted in a single directory.
+         dst_dir/patches
+flattening(True) & ignore_class(False)
+     = Patches are extracted in a corresponding class directory. 
+         dst_dir/class/patches
+flattening(False) & ignore_class(True)
+     = Patches in a slide are extracted in a corresponding slide directory.
+         dst_dir/slide/patches
+flattening(False) & ignore_class(False)
+     = Patches are extracted in a corresponding class directory inside of 
+     a slide directory.
+         dst_dir/slide/class/patches
+```

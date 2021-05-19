@@ -14,6 +14,20 @@ src_1:
 # ex)
 # - !!str folder1
 # - !!str folder2
+#
+# [CSV mode] Instead of folder path(s), you can optionally feed a path(s)
+# of a csv file. To use the feature, set a full path(s) of csv files here,
+# and set `csv_as_data_source` True.
+# If your task is weakly supervised, you can create a csv file for each class,
+# and set a destination folder for each class so that the processed tissues and
+# patches are split into classes.
+# ex)
+# src_1:
+# - !!str class1.csv
+# - !!str class2.csv
+# dst_1:
+# - !!str path_to/class1
+# - !!str path_to/class2
 
 dst_1:
 - !!str ./tissues
@@ -28,6 +42,20 @@ dst_1:
 #   image_suffix: "image_suffix"
 # If "flattening" parameter is True, the structure and the file name will be:
 #   {tissues}/{image_stem}_{X}_{Y}.{suffix}
+
+csv_as_data_source: !!bool True
+# ^ You can optionally use a csv to load a list of slides, instead of traversing
+# the source directory to locate svs/tiff files.
+# The specification of csv files is:
+#   - no header row
+#   - 1st column: slide ID. This could be the same as the the file name.
+#                 The point is you can set a shorter name for each slide if
+#                 the original name of the file is too long/complicated.
+#                 Note that the script applies Path(id).stem to remove any
+#                 parent paths and file extension. If this cell is left blank,
+#                 the script uses the 2nd column to generate an ID.
+#   - 2nd column: full path
+#   - 3rd column (optional): corresponding xml file path
 
 target_magnification: !!float 10
 # ^Target magnification (typical values: 10, 20, 40)

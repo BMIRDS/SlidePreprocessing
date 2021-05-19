@@ -1,0 +1,89 @@
+# Test case 4: Use CSV based source inputs
+
+src_1:
+- !!str ./testdata/test4.csv
+# ^Source folder(s) containing slides (and annotations if exist)
+# Should work both relative and absolute paths.
+# Please note that src_1, dst_1, opt1, src_2, dst_2 parameters should be
+# described as string in YAML's LIST FORMAT ("- !!str"). To process multiple folders
+# sequentially, add another item to each of parameters. (See the end of this
+# file to learn the YAML syntax.)
+# ex)
+# - !!str folder1
+# - !!str folder2
+#
+# [CSV mode] Instead of folder path(s), you can optionally feed a path(s)
+# of a csv file. To use the feature, set a full path(s) of csv files here,
+# and set `csv_as_data_source` True.
+# If your task is weakly supervised, you can create a csv file for each class,
+# and set a destination folder for each class so that the processed tissues and
+# patches are split into classes.
+# ex)
+# src_1:
+# - !!str class1.csv
+# - !!str class2.csv
+# dst_1:
+# - !!str path_to/class1
+# - !!str path_to/class2
+
+dst_1:
+- !!str ./testdata/1_tissues_t4
+
+csv_as_data_source: !!bool True
+# ^ You can optionally use a csv to load a list of slides, instead of traversing
+# the source directory to locate svs/tiff files.
+# The specification of csv files is:
+#   - no header row
+#   - 1st column: slide ID. This could be the same as the the file name.
+#                 The point is you can set a shorter name for each slide if
+#                 the original name of the file is too long/complicated.
+#                 Note that the script applies Path(id).stem to remove any
+#                 parent paths and file extension. If this cell is left blank,
+#                 the script uses the 2nd column to generate an ID.
+#   - 2nd column: full (absolute) path or relative path w.r.t the current working dir.
+#   - 3rd column (optional): corresponding xml file path
+
+target_magnification: !!float 10
+use_progress_bar: !!bool False
+
+tissueloc_config:
+   max_img_size: !!int 4096 # default: 4096
+   smooth_sigma: !!int 13 # default: 13
+   thresh_val: !!float 0.80 # default: 0.80 (Recommended: 0.85)
+   min_tissue_size: !!int 10000 #default 10000
+
+slide_extension: !!str tif
+
+opt1:
+    - !!str ''
+
+action_no_xml: !!str process
+use_userdefined_has_xml: !!bool False
+
+
+#""" Shared Parameters: Stage 1 & 2 -------------------------------------------
+# Corresponding scrits:
+# - 0_match_files.py
+# - 1_extract_tissues.py
+# - 2_extract_patches.py
+#"""
+num_workers: !!int 4
+multiprocess: !!bool False
+image_suffix: !!str png
+flattening: !!bool False
+
+#""" Stage 2 Parameters: Patch Extraction -------------------------------------
+# Corresponding scrits:
+# - 2_extract_patches.py
+#"""
+src_2:
+- !!str ./testdata/1_tissues_t4
+
+dst_2:
+- !!str ./testdata/2_patches_t4
+
+window_size: !!int 224
+overlap_factor: !!float 0.333
+tissue_threshold: !!float 0.7
+extract_notannotated: !!bool True
+ignore_class: !!bool False
