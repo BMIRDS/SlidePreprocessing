@@ -22,7 +22,7 @@ Author: Naofumi
 ### Extract patches from tissues
 [2_extract_patches.py](2_extract_patches.py)
 
-### Recent Backward Incompatible Changes
+## Recent Backward Incompatible Changes
 - "csv_as_data_source" parameter
     - Added in config file
     - Purpose: Set this True to feed a list of slide files in CSV format, instead of a directory path. This gives more flexibility in source folder structures, especially when only a subset of slides in a folder is to be processed. You can also set a nickname for a slide, which can be used for a destination folder name of the slide. (Default is to use a slide file name without file extension (i.e., stem)). This feature is useful when the original file name is too long, e.g. "TCGA-A3-A8OU-01Z-00-DX1.5BF363CE-9DB1-40BB-9E77-CF930F12B1B8.svs". Please see [config_test4.yaml](config/config_test4.yaml) for the specification of a CSV file.
