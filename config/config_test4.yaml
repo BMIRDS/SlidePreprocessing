@@ -2,16 +2,6 @@
 
 src_1:
 - !!str ./testdata/test4.csv
-# ^Source folder(s) containing slides (and annotations if exist)
-# Should work both relative and absolute paths.
-# Please note that src_1, dst_1, opt1, src_2, dst_2 parameters should be
-# described as string in YAML's LIST FORMAT ("- !!str"). To process multiple folders
-# sequentially, add another item to each of parameters. (See the end of this
-# file to learn the YAML syntax.)
-# ex)
-# - !!str folder1
-# - !!str folder2
-#
 # [CSV mode] Instead of folder path(s), you can optionally feed a path(s)
 # of a csv file. To use the feature, set a full path(s) of csv files here,
 # and set `csv_as_data_source` True.
