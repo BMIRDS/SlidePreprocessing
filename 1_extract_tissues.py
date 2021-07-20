@@ -247,7 +247,7 @@ def path_parser(src, opts, dst, csv_as_data_source=False):
                             "update \'has_xml_user\' function to locate the XML file. "
                             "Running \'0_match_files.py\' helps to tell if "
                             "the slide-xml pair is located.") 
-                slideid = path(slidepath).stem
+                slideid = Path(slidepath).stem
                 paths.append((slideid, slidepath, xmlpath, dp))
         results.append(paths)
     return results
