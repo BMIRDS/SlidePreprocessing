@@ -120,14 +120,15 @@ def overlay_annotation(image_path, xml_path, color='green', image_suffix='png'):
     img = Image.open(image_path)
     img2 = img.copy()
     draw = ImageDraw.Draw(img2)
-    polygon = annotations[0]['polygon']
-    if isinstance(polygon, MultiPolygon):
-        # multi-polygon; need draw one by one
-        for i in range(len(polygon)):
-            draw.polygon(polygon[i].exterior.coords, fill=color)
-    else:
-        # single polygon
-        draw.polygon(polygon.exterior.coords, fill=color)
+    for anno in annotations:    
+        polygon = anno['polygon']
+        if isinstance(polygon, MultiPolygon):
+            # multi-polygon; need draw one by one
+            for i in range(len(polygon)):
+                draw.polygon(polygon[i].exterior.coords, fill=color)
+        else:
+            # single polygon
+            draw.polygon(polygon.exterior.coords, fill=color)
     img3 = Image.blend(img, img2, 0.5)
     overlap_path = Path(image_path)
     overlap_path = overlap_path.parent / (overlap_path.stem + f'_overlay.{image_suffix}')
