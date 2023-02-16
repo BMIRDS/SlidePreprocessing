@@ -16,8 +16,11 @@ parser.add_argument('-c', '--cancer', type=str, default='TCGA_BLCA')
 parser.add_argument('-m', '--magnification', type=int, default=10)
 parser.add_argument('-s', '--patch-size', type=int, default=224)
 parser.add_argument('--backbone', type=str, default='resnet_18')
+parser.add_argument('--svs-meta', type=str, default='')
 
 args = parser.parse_args()
+
+assert os.path.isfile(args.svs_meta)
 
 print("=" * 40)
 print("Preparing data")
@@ -107,10 +110,23 @@ counts_all = counts_all.reset_index()
 
 # dfsel = df.loc[df.id_svs == counts_all.loc[counts_all.counts_4 > 16].id_svs.unique()[0]]
 
+print("")
+print("=" * 40)
+print("Merge with patch meta")
+
 df['valid'] = 1
 df['fid'] = df.index
 df = df.merge(counts_all, on=['id_svs', 'pos_x', 'pos_y'], how='outer')
 df['valid'] = df.valid.fillna(0)
+
+df_sum = df.groupby('id_svs', as_index=False).valid.sum()
+df_svs = pd.read_pickle(args.svs_meta)
+if 'valid' in df_svs.columns:
+    df_svs.drop('valid', axis=1, inplace=True)
+
+df_svs = df_svs.merge(df_sum, on='id_svs', how='inner')
+df_svs = df_svs.loc[df_svs.valid > 25]
+df_svs.to_pickle(args.svs_meta)
 
 print("")
 print("=" * 40)

@@ -69,9 +69,6 @@ def parse_json(cancer, root_dir):
 
     df['status'] = 0
     df.loc[df.vital_status == 'Dead', 'status'] = 1
-    df = df.loc[~df.time.isna()].copy().reset_index(drop=True)
-    print('number of participants after excluding missing time %s' %
-          df.shape[0])
     print(df.describe())
     return df[[
         'case_id', 'id_patient', 'vital_status', 'days_to_death', 'time',

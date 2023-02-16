@@ -9,20 +9,18 @@ from torchvision import transforms
 import argparse
 import tqdm
 import os
+import shutil
 
 parser = argparse.ArgumentParser(description='Feature extraction')
 parser.add_argument('-c', '--study', type=str, default='TCGA_BLCA')
 parser.add_argument('-j', '--num-workers', type=int, default=10)
-parser.add_argument('-m', '--magnification', type=int, default=20)
+parser.add_argument('-m', '--magnification', type=int, default=10)
 parser.add_argument('-s', '--patch-size', type=int, default=224)
 parser.add_argument('-b', '--batch-size', type=int, default=256)
+parser.add_argument('-l', '--num-layers', type=int, default=18)
 args = parser.parse_args()
 
-df = pd.read_pickle(
-    f'meta/{args.study}/patches_meta-mag_{args.magnification}-size_{args.patch_size}.pickle'
-)
-df.head()
-
+assert args.num_layers in [18,34,50]
 
 # load slide patches
 class SlidesDataset(Dataset):
@@ -62,17 +60,26 @@ def create_model(num_layers, pretrain, num_classes):
 
     if pretrain is True:
         print("Loading pretrained model!")
-        pretrained = model_constructor(pretrained=True).state_dict()
+        try:
+            pretrained = model_constructor(weights='IMAGENET1K_V1').state_dict()
+        except:
+            pretrained = model_constructor(pretrained=True).state_dict()
         if num_classes != pretrained['fc.weight'].size(0):
             del pretrained['fc.weight'], pretrained['fc.bias']
         model.load_state_dict(pretrained, strict=False)
     return model
 
 
+df = pd.read_pickle(
+    f'meta/{args.study}/patches_meta-mag_{args.magnification}-size_{args.patch_size}.pickle'
+)
+df.head()
+
+
 PATH_MEAN = [0.7968, 0.6492, 0.7542]
 PATH_STD = [0.1734, 0.2409, 0.1845]
 
-model = create_model(18, True, 1)
+model = create_model(args.num_layers, True, 1)
 model.fc = nn.Identity()
 model.cuda()
 model.eval()
@@ -91,12 +98,17 @@ dl = torch.utils.data.DataLoader(ds,
                                  pin_memory=False,
                                  drop_last=False)
 
+
+save_dir = f"features/{args.study}/mag_{args.magnification}-size_{args.patch_size}/resnet_{args.num_layers}/"
+if os.path.isdir(save_dir):
+    shutil.rmtree(save_dir)
+os.makedirs(
+    f"features/{args.study}/mag_{args.magnification}-size_{args.patch_size}/resnet_{args.num_layers}/",
+    exist_ok=True)
+
 for i, imgs in tqdm.tqdm(enumerate(dl), total=len(dl)):
     ft_i = model(imgs.cuda())
-    os.makedirs(
-        f"features/{args.study}/mag_{args.magnification}-size_224/resnet_18/",
-        exist_ok=True)
     torch.save(
         ft_i,
-        f"features/{args.study}/mag_{args.magnification}-size_224/resnet_18/{i:06d}.pt"
+        f"features/{args.study}/mag_{args.magnification}-size_{args.patch_size}/resnet_{args.num_layers}/{i:06d}.pt"
     )
