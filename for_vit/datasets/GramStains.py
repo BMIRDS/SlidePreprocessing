@@ -1,5 +1,6 @@
 #Gram Stains dataset class
-#Example use argument: python 01_get_svs_meta.py --study_name gram_stains --dataset_type GramStains  --svs_path /pool2/users/jackm/dpool/data/svs  --json_path meta-files/gram_stains.json --stratify_by specimen_type
+#Example use argument: python 01_get_svs_meta.py --study_name gram_stains --dataset_type GramStains  
+# --svs_path /pool2/users/jackm/dpool/data/svs  --json_path meta-files/gram_stains.json --stratify_by specimen_type
 
 import glob
 import json

@@ -1,5 +1,6 @@
 #TCGA dataset class
-#Example use argument: python 01_get_svs_meta.py --study_name TCGA_COAD --dataset_type TCGA  --svs_path /pool2/data/WSI_TCGA/Colorectal  --json_path ./meta-files/TCGA_COAD.json --stratify_by status
+#Example use argument: python 01_get_svs_meta.py --study_name TCGA_COAD --dataset_type TCGA  
+# --svs_path /pool2/data/WSI_TCGA/Colorectal  --json_path ./meta-files/TCGA_COAD.json --stratify_by status
 
 import glob
 import json
