@@ -2,9 +2,8 @@
 #Example use argument: python 01_get_svs_meta.py --study_name TCGA_COAD --dataset_type TCGA  
 # --svs_path /pool2/data/WSI_TCGA/Colorectal  --json_path ./meta-files/TCGA_COAD.json --stratify_by status
 
-import glob
 import json
-import os
+from pathlib import Path
 
 import pandas as pd
 
@@ -21,8 +20,8 @@ class TCGA(MetaFile):
     #produces self.df by reading in specified fields from input json file
     def parse_json(self):
         
-        fname = self.json_path
-        with open(fname) as f:
+        p = Path(self.json_path)
+        with p.open() as f:
             d = json.load(f)
         results = []
         for i in range(len(d)):
@@ -94,7 +93,7 @@ class TCGA(MetaFile):
     #produces self.df_svs by reading info from svs file names from input svs folder
     def parse_svs(self):
         
-        files = glob.glob(f'{self.svs_path}/*/*.svs')
+        files = [str(p) for p in Path(self.svs_path).rglob('*/*.svs')]
         print(f"{len(files)} files found!")
 
         df_svs = pd.DataFrame(files, columns=['svs_path'])
@@ -115,4 +114,5 @@ class TCGA(MetaFile):
         self.df = self.df.loc[self.df.id_patient.isin(df_svs.id_patient)].reset_index(drop=True)
         
         return df_svs
+
 

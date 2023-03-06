@@ -2,9 +2,8 @@
 #Example use argument: python 01_get_svs_meta.py --study_name gram_stains --dataset_type GramStains  
 # --svs_path /pool2/users/jackm/dpool/data/svs  --json_path meta-files/gram_stains.json --stratify_by specimen_type
 
-import glob
 import json
-import os
+from pathlib import Path
 
 import pandas as pd
 
@@ -72,7 +71,7 @@ class GramStains(MetaFile):
     #produces self.df_svs by reading info from svs file names from input svs folder
     def parse_svs(self):
         
-        files = glob.glob(f'{self.svs_path}/*.svs')
+        files = [str(p) for p in Path(self.svs_path).rglob('*.svs')]
         print(f"{len(files)} files found!")
 
         df_svs = pd.DataFrame(files, columns=['svs_path'])

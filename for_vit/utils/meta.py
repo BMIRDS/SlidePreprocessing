@@ -4,8 +4,7 @@
 # implement dataset specific parse_json() and parse_svs() functions. These functions 
 # are designed to produce self.df and self.df_svs, respectively.
 
-import glob
-import os
+from pathlib import Path
 
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
@@ -25,7 +24,6 @@ class MetaFile:
     def split(self):
         
         skf = StratifiedKFold(n_splits=self.num_folds, random_state=45342, shuffle=True)
-        print(self.df.size)
         self.df['fold'] = 0
         for i, (train_index,
                 test_index) in enumerate(skf.split(self.df, self.df[self.stratify_by])):
@@ -35,6 +33,8 @@ class MetaFile:
     
     #Produces meta.pickle and svs.pickle files for dataset in specific folder
     def make_pickle(self, folder = 'meta'):
-        os.makedirs(folder, exist_ok=True)
+        p = Path(folder)
+        p.mkdir(exist_ok=True)
         self.df.to_pickle(f'{folder}/{self.study_name.lower()}_meta.pickle')
         self.df_svs.to_pickle(f'{folder}/{self.study_name.lower()}_svs.pickle')
+
