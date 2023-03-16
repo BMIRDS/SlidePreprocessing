@@ -6,12 +6,12 @@ from datasets.GramStains import GramStains
 from datasets.TCGA import  TCGA
 
 parser = argparse.ArgumentParser(description='svs/json meta file production')
-parser.add_argument('--study_name', type=str, default='gram_stains')
-parser.add_argument('--dataset_type', type=str, default='GramStains')
-parser.add_argument('--svs_path', type=str, default='/pool2/users/jackm/dpool/data/svs')
-parser.add_argument('--json_path', type=str, default='meta-files/gram_stains.json')
-parser.add_argument('--stratify_by', type=str, default='specimen_type')
-parser.add_argument('--num_folds', type=str, default= 5)
+parser.add_argument('--study_name', type=str, help="Name of the study to be used. For example: TCGA_COAD")
+parser.add_argument('--dataset_type', type=str, help="Indicates json processing pipeline. For example: TCGA ")
+parser.add_argument('--svs_path', type=str, help="Path to the folder containing svs data. For example: /pool2/data/WSI_TCGA/Colorectal ")
+parser.add_argument('--json_path', type=str, help="Path to the json file with dataset info. For example: ./meta-files/TCGA_COAD.json ")
+parser.add_argument('--stratify_by', type=str, help="Dataset field to use with stratification. For example: status ")
+parser.add_argument('--num_folds', type=str, help= "Number of folds for kfold cross validation. For example: 5 ")
 args = parser.parse_args()
 
 if __name__ == '__main__':
