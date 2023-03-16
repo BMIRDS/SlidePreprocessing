@@ -1,13 +1,14 @@
-import pandas as pd
-import torch
 import argparse
 import glob
-from pandarallel import pandarallel
 import itertools
-import numpy as np
-import tqdm
 import os
+
+from pandarallel import pandarallel
 from skimage.util.shape import view_as_windows
+import numpy as np
+import pandas as pd
+import torch
+import tqdm
 
 pandarallel.initialize(nb_workers=12, progress_bar=True)
 

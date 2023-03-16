@@ -1,7 +1,8 @@
-import glob
-import pandas as pd
-import os
 import argparse
+import glob
+import os
+
+import pandas as pd
 import tqdm
 
 parser = argparse.ArgumentParser(description='get patch meta')

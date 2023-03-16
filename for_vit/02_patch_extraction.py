@@ -1,7 +1,9 @@
-import os
-import pandas as pd
-from tqdm.contrib.concurrent import process_map
 import argparse
+import os
+
+from tqdm.contrib.concurrent import process_map
+import pandas as pd
+
 from utils.wsi import WsiSampler
 
 parser = argparse.ArgumentParser(description='Patch extraction')

@@ -1,15 +1,17 @@
-import torch
-from torch.utils.data import Dataset
-import pandas as pd
-import numpy as np
-import torchvision
-from torch import nn
 from PIL import Image
-from torchvision import transforms
 import argparse
-import tqdm
 import os
 import shutil
+
+from torch import nn
+from torch.utils.data import Dataset
+from torchvision import transforms
+import numpy as np
+import pandas as pd
+import torch
+import torchvision
+import tqdm
+
 
 parser = argparse.ArgumentParser(description='Feature extraction')
 parser.add_argument('-c', '--study', type=str, default='TCGA_BLCA')
