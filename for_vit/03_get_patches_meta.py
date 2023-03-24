@@ -1,3 +1,22 @@
+"""
+This script processes metadata from a specific cancer dataset, extracting patch 
+metadata for a given magnification and patch size. It concatenates the results 
+and saves the final metadata as a pickle file.
+
+Usage:
+python get_patch_meta.py [-c CANCER] [-s SIZE] [-m MAGNIFICATION] [--svs-meta SVS_META]
+
+Command-line Arguments:
+-c, --cancer         : Cancer subset to process (default: TCGA_BLCA)
+-s, --size           : Patch size (default: 224)
+-m, --magnification  : Magnification level (default: 10)
+--svs-meta           : Path to the input metadata pickle file (default: '')
+
+Example:
+python get_patch_meta.py -c TCGA_BLCA -s 224 -m 10 --svs-meta meta/dhmc_rcc_svs.pickle
+
+"""
+
 import argparse
 import glob
 import os
@@ -6,10 +25,22 @@ import pandas as pd
 import tqdm
 
 parser = argparse.ArgumentParser(description='get patch meta')
-parser.add_argument('-c', '--cancer', type=str, default='TCGA_BLCA')
-parser.add_argument('-s', '--size', type=int, default=224)
-parser.add_argument('-m', '--magnification', type=int, default=10)
-parser.add_argument('--svs-meta', type=str, default='')
+parser.add_argument('-c', '--cancer', 
+                    type=str, 
+                    default='TCGA_BLCA',
+                    help='Cancer subset (default: TCGA_BLCA)')
+parser.add_argument('-s', '--size', 
+                    type=int, 
+                    default=224,
+                    help='Patch size (default: 224)')
+parser.add_argument('-m', '--magnification', 
+                    type=int, 
+                    default=10,
+                    help='Magnification level (default: 10)')
+parser.add_argument('--svs-meta', 
+                    type=str, 
+                    default='',
+                    help='Path to the svs meta file (default: None)')
 args = parser.parse_args()
 
 df_meta = pd.read_pickle(args.svs_meta)

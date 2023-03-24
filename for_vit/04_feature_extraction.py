@@ -1,3 +1,20 @@
+"""
+This script extracts features from slide patches using a pre-trained ResNet model.
+
+Usage: The script is executed from the command line and takes arguments for 
+the study name, patch size, magnification, number of layers, and batch size.
+
+Command-line arguments:
+
+'-c', '--study': The name of the study (default: 'TCGA_BLCA')
+'-j', '--num-workers': The number of workers (default: 10)
+'-m', '--magnification': The magnification of the slide patches (default: 10)
+'-s', '--patch-size': The size of the slide patches (default: 224)
+'-b', '--batch-size': The batch size for processing patches (default: 256)
+'-l', '--num-layers': The number of layers for the ResNet model (default: 18)
+
+"""
+
 from PIL import Image
 import argparse
 import os
@@ -14,12 +31,30 @@ import tqdm
 
 
 parser = argparse.ArgumentParser(description='Feature extraction')
-parser.add_argument('-c', '--study', type=str, default='TCGA_BLCA')
-parser.add_argument('-j', '--num-workers', type=int, default=10)
-parser.add_argument('-m', '--magnification', type=int, default=10)
-parser.add_argument('-s', '--patch-size', type=int, default=224)
-parser.add_argument('-b', '--batch-size', type=int, default=256)
-parser.add_argument('-l', '--num-layers', type=int, default=18)
+parser.add_argument('-c', '--study', 
+                    type=str, 
+                    default='TCGA_BLCA',
+                    help="Name of the study to be used. Default is TCGA_BLCA.")
+parser.add_argument('-j', '--num-workers', 
+                    type=int, 
+                    default=10,
+                    help="Number of workers for data loading. Default is 10.")
+parser.add_argument('-m', '--magnification', 
+                    type=int, 
+                    default=10,
+                    help="Magnification level of slide patches. Default is 10.")
+parser.add_argument('-s', '--patch-size', 
+                    type=int, 
+                    default=224,
+                    help="Size of the slide patches. Default is 224.")
+parser.add_argument('-b', '--batch-size', 
+                    type=int, 
+                    default=256,
+                    help="Batch size for processing slide patches. Default is 256.")
+parser.add_argument('-l', '--num-layers', 
+                    type=int, 
+                    default=18,
+                    help="Number of layers in the ResNet model. Default is 18.")
 args = parser.parse_args()
 
 assert args.num_layers in [18,34,50]

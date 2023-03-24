@@ -1,3 +1,23 @@
+"""
+This script is used for post-processing of extracted image patches to count valid 
+patches, and extract and save their corresponding features. The output is saved 
+in the data folder as meta data and features.
+
+Usage: The script can be run from the command line with arguments for cancer 
+type, magnification, patch size, backbone model, and path to slide meta data. 
+The script reads the patch meta data, counts valid patches, merges with patch 
+meta data, and extracts and saves corresponding features.
+
+Command-line arguments:
+
+'-c', '--cancer': Type of cancer. Default is 'TCGA_BLCA'.
+'-m', '--magnification': Magnification level of the slide. Default is 10.
+'-s', '--patch-size': Size of the image patch. Default is 224.
+'--backbone': Backbone model for feature extraction. Default is 'resnet_18'.
+'--svs-meta': Path to slide meta data. Default is an empty string.
+
+"""
+
 import argparse
 import glob
 import itertools
@@ -13,11 +33,26 @@ import tqdm
 pandarallel.initialize(nb_workers=12, progress_bar=True)
 
 parser = argparse.ArgumentParser(description='Post Processing')
-parser.add_argument('-c', '--cancer', type=str, default='TCGA_BLCA')
-parser.add_argument('-m', '--magnification', type=int, default=10)
-parser.add_argument('-s', '--patch-size', type=int, default=224)
-parser.add_argument('--backbone', type=str, default='resnet_18')
-parser.add_argument('--svs-meta', type=str, default='')
+parser.add_argument('-c', '--cancer', 
+                    type=str, 
+                    default='TCGA_BLCA', 
+                    help='The name of the cancer to process (default: TCGA_BLCA)')
+parser.add_argument('-m', '--magnification', 
+                    type=int, 
+                    default=10, 
+                    help='The magnification level of the patches (default: 10)')
+parser.add_argument('-s', '--patch-size', 
+                    type=int, 
+                    default=224, 
+                    help='The size of the patches (default: 224)')
+parser.add_argument('--backbone', 
+                    type=str, 
+                    default='resnet_18', 
+                    help='The name of the backbone architecture to use (default: resnet_18)')
+parser.add_argument('--svs-meta', 
+                    type=str, 
+                    default='', 
+                    help='The path to the slide meta file (default: '')')
 
 args = parser.parse_args()
 
