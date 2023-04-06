@@ -1,3 +1,4 @@
+#TODO: OBSOLETE, NEED UPDATE THE PIPELINE. SHOULD USE SMALLER DATASET FOR TESTING.
 # example pipeline
 
 python 01_get_svs_meta.py

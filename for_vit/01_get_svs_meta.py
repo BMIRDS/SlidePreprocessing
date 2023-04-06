@@ -30,27 +30,23 @@ python script.py --study_name TCGA_COAD --dataset_type TCGA \
 import argparse
 import importlib
 
-from utils.meta import MetaFile
-from datasets.GramStains import GramStains
-from datasets.TCGA import  TCGA
-
 parser = argparse.ArgumentParser(description='svs/json meta file production')
-parser.add_argument('--study_name', type=str, 
+parser.add_argument('--study_name', type=str, required=True,
                     help="Name of the study to be used. "
                     "For example: TCGA_COAD")
-parser.add_argument('--dataset_type', type=str, 
+parser.add_argument('--dataset_type', type=str, required=True,
                     help="Indicates json processing pipeline. "
                     "For example: TCGA ")
-parser.add_argument('--svs_path', type=str, 
+parser.add_argument('--svs_path', type=str, required=True,
                     help="Path to the folder containing svs data. "
                     "For example: /pool2/data/WSI_TCGA/Colorectal ")
-parser.add_argument('--json_path', type=str, 
+parser.add_argument('--json_path', type=str, required=True,
                     help="Path to the json file with dataset info. "
                     "For example: ./meta-files/TCGA_COAD.json ")
-parser.add_argument('--stratify_by', type=str, 
+parser.add_argument('--stratify_by', type=str, required=True,
                     help="Dataset field to use with stratification. "
                     "For example: status ")
-parser.add_argument('--num_folds', type=str, 
+parser.add_argument('--num_folds', type=int, required=True,
                     help= "Number of folds for kfold cross validation. "
                     "For example: 5 ")
 args = parser.parse_args()
@@ -58,14 +54,14 @@ args = parser.parse_args()
 if __name__ == '__main__':
     
     module = importlib.import_module(f'datasets.{args.dataset_type}')
-    DatasetClass = getattr(module, args.dataset_type)
+    Dataset = getattr(module, args.dataset_type)
     
-    dataset = DatasetClass(
-        args.study_name,
-        args.svs_path,
-        args.json_path,
-        args.stratify_by,
-        args.num_folds)
+    dataset = Dataset(
+        study_name=args.study_name,
+        svs_path=args.svs_path,
+        json_path=args.json_path,
+        stratify_by=args.stratify_by,
+        num_folds=args.num_folds)
     
     dataset.split()
     dataset.make_pickle()
