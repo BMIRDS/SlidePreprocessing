@@ -37,8 +37,8 @@ parser.add_argument('-c', '--study',
                     help="Name of the study to be used. Default is TCGA_BLCA.")
 parser.add_argument('-j', '--num-workers', 
                     type=int, 
-                    default=10,
-                    help="Number of workers for data loading. Default is 10.")
+                    default=4,
+                    help="Number of workers for data loading. Default is 4.")
 parser.add_argument('-m', '--magnification', 
                     type=int, 
                     default=10,

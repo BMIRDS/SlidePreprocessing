@@ -5,14 +5,15 @@
 # are designed to produce self.df and self.df_svs, respectively.
 
 from pathlib import Path
+import abc
 
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 
 
-class MetaFile:
-    def __init__(self, study_name='', svs_path='', json_path='',
-                 stratify_by='', num_folds=5):
+class MetaFile(abc.ABC):
+    def __init__(self, study_name: str = '', svs_path: str = '', json_path: str = '',
+                 stratify_by: str = '', num_folds: int = 5):
         self.study_name = study_name
         self.svs_path = svs_path
         self.json_path = json_path
@@ -24,17 +25,29 @@ class MetaFile:
     def split(self):
         
         skf = StratifiedKFold(n_splits=self.num_folds, random_state=45342, shuffle=True)
+
+        # A new column named "fold" is added to the DataFrame stored in self.df.
+        # All rows in this column are initialized to 0.
         self.df['fold'] = 0
-        for i, (train_index,
-                test_index) in enumerate(skf.split(self.df, self.df[self.stratify_by])):
+        print("[INFO] \n", self.df.to_string())
+        splits = skf.split(self.df, self.df[self.stratify_by])
+        for i, (_, test_index) in enumerate(splits):
             self.df.loc[test_index, 'fold'] = i
 
         print(pd.crosstab(self.df.fold, self.df[self.stratify_by]))
     
-    #Produces meta.pickle and svs.pickle files for dataset in specific folder
-    def make_pickle(self, folder = 'meta'):
-        p = Path(folder)
-        p.mkdir(exist_ok=True)
-        self.df.to_pickle(f'{folder}/{self.study_name.lower()}_meta.pickle')
-        self.df_svs.to_pickle(f'{folder}/{self.study_name.lower()}_svs.pickle')
+    #Produces meta.pickle and svs.pickle files for dataset in specific directory
+    def make_pickle(self, dir_path: str = 'meta'):
+        dir_path = Path(dir_path)
+        dir_path.mkdir(parents=True, exist_ok=True)
 
+        self.df.to_pickle(dir_path / f'{self.study_name.lower()}_meta.pickle')
+        self.df_svs.to_pickle(dir_path / f'{self.study_name.lower()}_svs.pickle')
+
+    @abc.abstractmethod
+    def parse_json(self):
+        pass
+
+    @abc.abstractmethod
+    def parse_svs(self):
+        pass

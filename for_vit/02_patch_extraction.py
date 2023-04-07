@@ -37,8 +37,8 @@ parser.add_argument('-c', '--cancer',
                     help='cancer subset')
 parser.add_argument('-j', '--num-workers',
                     type=int,
-                    default=10,
-                    help='Number of parallel workers for processing (default: 10)')
+                    default=4,
+                    help='Number of parallel workers for processing (default: 4)')
 parser.add_argument('-m', '--magnification',
                     type=int,
                     default=10,

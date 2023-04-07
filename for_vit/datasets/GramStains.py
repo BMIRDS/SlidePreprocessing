@@ -7,13 +7,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from utils.meta import MetaFile
+from datasets.base import MetaFile
 
 class GramStains(MetaFile):
     def __init__(self, study_name='', svs_path='', json_path='',
                  stratify_by='', num_folds=5):
         super().__init__(study_name, svs_path, json_path, stratify_by,
-                         num_folds=5)
+                         num_folds=num_folds)
         self.df = self.parse_json()
         self.df_svs = self.parse_svs()
         

@@ -7,13 +7,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from utils.meta import MetaFile
+from datasets.base import MetaFile
 
 class TCGA(MetaFile):
     def __init__(self, study_name='', svs_path='', json_path='',
                  stratify_by='', num_folds=5):
-        super().__init__(study_name, svs_path, json_path, stratify_by,
-                         num_folds=5)
+        super().__init__(study_name, svs_path, json_path, stratify_by, num_folds)
         self.df = self.parse_json()
         self.df_svs = self.parse_svs()
     
@@ -65,8 +64,8 @@ class TCGA(MetaFile):
 
         df.rename(columns={'submitter_id': 'id_patient'}, inplace=True)
 
-        print(df.shape)
-        print(df.id_patient.unique().shape)
+        print(f"[INFO] Data Frame Shape: {df.shape}")
+        print(f"[INFO] Unique Patients: {df.id_patient.unique().shape}")
 
         # preparing the survival outcome
         # filtering out patients without follow-up information
@@ -83,7 +82,7 @@ class TCGA(MetaFile):
 
         df['status'] = 0
         df.loc[df.vital_status == 'Dead', 'status'] = 1
-        print(df.describe())
+        print("[INFO] ", df.describe())
         df['cancer'] = self.study_name
         return df[[
             'case_id', 'id_patient', 'vital_status', 'days_to_death', 'time',
@@ -93,8 +92,8 @@ class TCGA(MetaFile):
     #produces self.df_svs by reading info from svs file names from input svs folder
     def parse_svs(self):
         
-        files = [str(p) for p in Path(self.svs_path).rglob('*/*.svs')]
-        print(f"{len(files)} files found!")
+        files = [str(p) for p in Path(self.svs_path).rglob('*.svs')]
+        print(f"[INFO] {len(files)} files found!")
 
         df_svs = pd.DataFrame(files, columns=['svs_path'])
         df_svs['id_patient'] = df_svs.svs_path.apply(
