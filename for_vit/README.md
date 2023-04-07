@@ -1,6 +1,13 @@
 # Installing Dependencies (Recommended method)
 Use `install_requirements.sh`
 
+## Installation Pitfalls
+- AttributeError: partially initialized module 'cv2' has no attribute 'gapi_wip_gst_GStreamerPipeline' (most likely due to a circular import)
+You have multiple instances of opencv. do pip uninstall openslide-python
+
+- OSError: libopenslide.so.0: cannot open shared object file: No such file or directory
+You don't have openslide binary installed. do apt install openslide-tools python3-openslide
+
 # TODO:
 ## High Priority
 - Remove hard-coded data: pool2 paths and cancer types: current default parameters should be noted in the help of each argument.
