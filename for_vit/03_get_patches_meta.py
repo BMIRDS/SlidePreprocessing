@@ -17,61 +17,85 @@ python get_patch_meta.py -c TCGA_BLCA -s 224 -m 10 --svs-meta meta/dhmc_rcc_svs.
 
 """
 
-import argparse
+from pathlib import Path
 import glob
 import os
+import traceback
 
 import pandas as pd
 import tqdm
 
-parser = argparse.ArgumentParser(description='get patch meta')
-parser.add_argument('-c', '--cancer', 
-                    type=str, 
-                    default='TCGA_BLCA',
-                    help='Cancer subset (default: TCGA_BLCA)')
-parser.add_argument('-s', '--size', 
-                    type=int, 
-                    default=224,
-                    help='Patch size (default: 224)')
-parser.add_argument('-m', '--magnification', 
-                    type=int, 
-                    default=10,
-                    help='Magnification level (default: 10)')
-parser.add_argument('--svs-meta', 
-                    type=str, 
-                    default='',
-                    help='Path to the svs meta file (default: None)')
-args = parser.parse_args()
+from utils.config import Config, default_options
+from utils.print_utils import print_intro, print_outro
+from utils.io_utils import create_patches_meta_path, create_patches_dir, create_slide_meta_path
 
-df_meta = pd.read_pickle(args.svs_meta)
-print(df_meta.shape)
-df_sub = df_meta.loc[df_meta.cancer == args.cancer]
-res = []
-for subdir in tqdm.tqdm(df_sub.id_svs.unique()):
-    try:
-        dfi = pd.read_pickle(f"meta/{args.cancer}/mag_{args.magnification}-size_{args.size}/{subdir}.pickle")
-        res.append(dfi)
-    except Exception as e:
-        print(e)
+# parser = argparse.ArgumentParser(description='get patch meta')
+# parser.add_argument('-c', '--cancer', 
+#                     type=str, 
+#                     default='TCGA_BLCA',
+#                     help='Cancer subset (default: TCGA_BLCA)')
+# parser.add_argument('-s', '--size', 
+#                     type=int, 
+#                     default=224,
+#                     help='Patch size (default: 224)')
+# parser.add_argument('-m', '--magnification', 
+#                     type=int, 
+#                     default=10,
+#                     help='Magnification level (default: 10)')
+# parser.add_argument('--svs-meta', 
+#                     type=str, 
+#                     default='',
+#                     help='Path to the svs meta file (default: None)')
+# args = parser.parse_args()
 
-svs_ids = [x.split('/')[-1] for x in glob.glob(f"patches/{args.cancer}/mag_{args.magnification}-size_{args.size}/*")]
+def main():
+    args = default_options()
+    config = Config(
+        args.default_config_file,
+        args.user_config_file)
 
-df = pd.concat(res)
-df = df.loc[df.id_svs.isin(svs_ids)].reset_index(drop=True)
+    study_name = config.study.study_name
+    df_meta = pd.read_pickle(config.patch.svs_meta)
+    print("[INFO] ", df_meta.shape)
+    df_sub = df_meta.loc[df_meta.cancer == study_name]
+    res = []
+    for slide_id in tqdm.tqdm(df_sub.id_svs.unique()):
+        try:
+            
+            magnification = config.patch.magnification
+            patch_size = config.patch.patch_size
+            pickle_file = create_slide_meta_path(study_name, magnification, patch_size, slide_id)
+            dfi = pd.read_pickle(pickle_file)
+            res.append(dfi)
+        except Exception as e:
+            print(e)
+            print(traceback.format_exc())
+
+    patch_dir = create_patches_dir(study_name, magnification, patch_size)
+    svs_ids = [p.name for p in patch_dir.glob("*")]
+
+    df = pd.concat(res)
+    df = df.loc[df.id_svs.isin(svs_ids)].reset_index(drop=True)
 
 
-if args.cancer.split('_')[0] == 'TCGA':
-    df['id_patient'] = df.file.apply(lambda x: x.split('/')[-3][0:12])
-    df['type'] = df.id_svs.apply(lambda x: x.split('-')[3])
-else:
-    df['id_patient'] = df['id_svs']
-    df['type'] = '01Z'
+    # TODO: NEED TO USE RE
+    if study_name.split('_')[0] == 'TCGA':
+        df['id_patient'] = df.file.apply(lambda x: x.split('/')[-3][0:12])
+        df['type'] = df.id_svs.apply(lambda x: x.split('-')[3])
+    else:
+        df['id_patient'] = df['id_svs']
+        df['type'] = '01Z'
 
-print(df.type.value_counts())
-print(df.id_patient.head())
-print(df.id_svs.head())
+    print("[INFO] ", df.type.value_counts())
+    print("[INFO] ", df.id_patient.head())
+    print("[INFO] ", df.id_svs.head())
 
-os.makedirs(f'meta/{args.cancer}', exist_ok=True)
-df.to_pickle(
-    f'meta/{args.cancer}/patches_meta-mag_{args.magnification}-size_{args.size}.pickle'
-)
+    patch_meta_path = create_patches_meta_path(study_name, magnification, patch_size)
+    patch_meta_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_pickle(patch_meta_path)
+
+
+if __name__ == '__main__':
+    print_intro(__file__)
+    main()
+    print_outro(__file__)

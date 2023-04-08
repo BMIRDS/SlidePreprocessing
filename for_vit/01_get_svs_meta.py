@@ -27,41 +27,33 @@ python script.py --study_name TCGA_COAD --dataset_type TCGA \
 
 """
 
-import argparse
 import importlib
 
-parser = argparse.ArgumentParser(description='svs/json meta file production')
-parser.add_argument('--study_name', type=str, required=True,
-                    help="Name of the study to be used. "
-                    "For example: TCGA_COAD")
-parser.add_argument('--dataset_type', type=str, required=True,
-                    help="Indicates json processing pipeline. "
-                    "For example: TCGA ")
-parser.add_argument('--svs_path', type=str, required=True,
-                    help="Path to the folder containing svs data. "
-                    "For example: /pool2/data/WSI_TCGA/Colorectal ")
-parser.add_argument('--json_path', type=str, required=True,
-                    help="Path to the json file with dataset info. "
-                    "For example: ./meta-files/TCGA_COAD.json ")
-parser.add_argument('--stratify_by', type=str, required=True,
-                    help="Dataset field to use with stratification. "
-                    "For example: status ")
-parser.add_argument('--num_folds', type=int, required=True,
-                    help= "Number of folds for kfold cross validation. "
-                    "For example: 5 ")
-args = parser.parse_args()
+from utils.config import Config, default_options
+from utils.print_utils import print_intro, print_outro
 
-if __name__ == '__main__':
-    
-    module = importlib.import_module(f'datasets.{args.dataset_type}')
-    Dataset = getattr(module, args.dataset_type)
+
+def main():
+    args = default_options()
+    config = Config(
+        args.default_config_file,
+        args.user_config_file)
+
+    module = importlib.import_module(f'datasets.{config.study.dataset_type}')
+    Dataset = getattr(module, config.study.dataset_type)
     
     dataset = Dataset(
-        study_name=args.study_name,
-        svs_path=args.svs_path,
-        json_path=args.json_path,
-        stratify_by=args.stratify_by,
-        num_folds=args.num_folds)
+        study_name=config.study.study_name,
+        svs_path=config.study.svs_dir,
+        json_path=config.study.json_path,
+        stratify_by=config.study.stratify_by,
+        num_folds=config.study.num_folds)
     
     dataset.split()
     dataset.make_pickle()
+
+
+if __name__ == '__main__':
+    print_intro(__file__)
+    main()
+    print_outro(__file__)

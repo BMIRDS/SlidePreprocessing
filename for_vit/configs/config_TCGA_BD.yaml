@@ -1,0 +1,10 @@
+study:
+  study_name: !!str TCGA_CHOL
+  dataset_type: !!str TCGA
+  svs_dir: !!str /pool2/data/TMP/DPool_test/TCGA_BD_link
+  json_path: !!str /pool2/data/TMP/DPool_test/TCGA_clinical_BD/TCGA-CHOL.json
+  num_folds: !!int 2
+
+patch:
+  magnification: !!float 5
+  svs_meta: !!str meta/tcga_chol_svs.pickle
