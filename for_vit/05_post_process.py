@@ -43,30 +43,6 @@ def main():
 
     pandarallel.initialize(nb_workers=config.patch.num_workers, progress_bar=True)
 
-    # parser = argparse.ArgumentParser(description='Post Processing')
-    # parser.add_argument('-c', '--cancer', 
-    #                     type=str, 
-    #                     default='TCGA_BLCA', 
-    #                     help='The name of the cancer to process (default: TCGA_BLCA)')
-    # parser.add_argument('-m', '--magnification', 
-    #                     type=int, 
-    #                     default=10, 
-    #                     help='The magnification level of the patches (default: 10)')
-    # parser.add_argument('-s', '--patch-size', 
-    #                     type=int, 
-    #                     default=224, 
-    #                     help='The size of the patches (default: 224)')
-    # parser.add_argument('--backbone', 
-    #                     type=str, 
-    #                     default='resnet_18', 
-    #                     help='The name of the backbone architecture to use (default: resnet_18)')
-    # parser.add_argument('--svs-meta', 
-    #                     type=str, 
-    #                     default='', 
-    #                     help='The path to the slide meta file (default: '')')
-
-    # args = parser.parse_args()
-
     assert Path(config.patch.svs_meta).is_file()
 
     print("=" * 40)
