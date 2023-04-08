@@ -31,13 +31,13 @@ import pandas as pd
 from utils.config import Config, default_options
 from utils.print_utils import print_intro, print_outro
 from utils.wsi import WsiSampler
+from utils.io_utils import create_slide_meta_dir
 
 def call_get_patches(params):
     return get_patches(*params)
 
 def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int, magnification: float):
     try:
-        # svs_path, svs_root, study = inputs
         wsi = WsiSampler(svs_path=svs_fname,
                          svs_root=svs_root,
                          study=study,
@@ -50,7 +50,7 @@ def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int, magn
         df['id_svs'] = svs_fname.stem
         df['svs_root'] = svs_root
 
-        output_dir = Path("meta") / f"{study}" / f"mag_{magnification}-size_{patch_size}"
+        output_dir = create_slide_meta_dir(study, magnification, patch_size)
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / f"{svs_fname.with_suffix('.pickle')}"
         df.to_pickle(output_path)

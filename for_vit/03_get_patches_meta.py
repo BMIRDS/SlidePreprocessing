@@ -17,9 +17,6 @@ python get_patch_meta.py -c TCGA_BLCA -s 224 -m 10 --svs-meta meta/dhmc_rcc_svs.
 
 """
 
-from pathlib import Path
-import glob
-import os
 import traceback
 
 import pandas as pd
@@ -28,25 +25,6 @@ import tqdm
 from utils.config import Config, default_options
 from utils.print_utils import print_intro, print_outro
 from utils.io_utils import create_patches_meta_path, create_patches_dir, create_slide_meta_path
-
-# parser = argparse.ArgumentParser(description='get patch meta')
-# parser.add_argument('-c', '--cancer', 
-#                     type=str, 
-#                     default='TCGA_BLCA',
-#                     help='Cancer subset (default: TCGA_BLCA)')
-# parser.add_argument('-s', '--size', 
-#                     type=int, 
-#                     default=224,
-#                     help='Patch size (default: 224)')
-# parser.add_argument('-m', '--magnification', 
-#                     type=int, 
-#                     default=10,
-#                     help='Magnification level (default: 10)')
-# parser.add_argument('--svs-meta', 
-#                     type=str, 
-#                     default='',
-#                     help='Path to the svs meta file (default: None)')
-# args = parser.parse_args()
 
 def main():
     args = default_options()

@@ -19,10 +19,7 @@ Command-line arguments:
 """
 
 from pathlib import Path
-# import argparse
-import glob
 import itertools
-import os
 
 from pandarallel import pandarallel
 from skimage.util.shape import view_as_windows
