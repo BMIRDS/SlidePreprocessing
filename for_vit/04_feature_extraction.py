@@ -16,8 +16,6 @@ Command-line arguments:
 """
 
 from PIL import Image
-import argparse
-import os
 import shutil
 
 from torch import nn
@@ -29,35 +27,9 @@ import torch
 import torchvision
 import tqdm
 
-
-parser = argparse.ArgumentParser(description='Feature extraction')
-parser.add_argument('-c', '--study', 
-                    type=str, 
-                    default='TCGA_BLCA',
-                    help="Name of the study to be used. Default is TCGA_BLCA.")
-parser.add_argument('-j', '--num-workers', 
-                    type=int, 
-                    default=4,
-                    help="Number of workers for data loading. Default is 4.")
-parser.add_argument('-m', '--magnification', 
-                    type=int, 
-                    default=10,
-                    help="Magnification level of slide patches. Default is 10.")
-parser.add_argument('-s', '--patch-size', 
-                    type=int, 
-                    default=224,
-                    help="Size of the slide patches. Default is 224.")
-parser.add_argument('-b', '--batch-size', 
-                    type=int, 
-                    default=256,
-                    help="Batch size for processing slide patches. Default is 256.")
-parser.add_argument('-l', '--num-layers', 
-                    type=int, 
-                    default=18,
-                    help="Number of layers in the ResNet model. Default is 18.")
-args = parser.parse_args()
-
-assert args.num_layers in [18,34,50]
+from utils.config import Config, default_options
+from utils.print_utils import print_intro, print_outro
+from utils.io_utils import create_patches_meta_path, create_features_dir
 
 # load slide patches
 class SlidesDataset(Dataset):
@@ -107,45 +79,55 @@ def create_model(num_layers, pretrain, num_classes):
     return model
 
 
-df = pd.read_pickle(
-    f'meta/{args.study}/patches_meta-mag_{args.magnification}-size_{args.patch_size}.pickle'
-)
-df.head()
+def main():
+    args = default_options()
+    config = Config(
+        args.default_config_file,
+        args.user_config_file)
+
+    study_name = config.study.study_name
+    magnification = config.patch.magnification
+    patch_size = config.patch.patch_size
+    patches_meta_path = create_patches_meta_path(study_name, magnification, patch_size)
+    df = pd.read_pickle(patches_meta_path)
+    df.head()
+
+    PATH_MEAN = config.feature.path_mean
+    PATH_STD = config.feature.path_std
+
+    num_layers = int(config.patch.backbone.replace('resnet_', ''))
+    assert num_layers in [18,34,50]
+
+    model = create_model(num_layers, True, 1)
+    model.fc = nn.Identity()
+    model.cuda()
+    model.eval()
+
+    trf = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Resize(patch_size),
+        transforms.Normalize(PATH_MEAN, PATH_STD)
+    ])
+
+    ds = SlidesDataset(df, transform=trf)
+    dl = torch.utils.data.DataLoader(ds,
+                                    shuffle=False,
+                                    batch_size=config.patch.batch_size,
+                                    num_workers=config.patch.num_workers,
+                                    pin_memory=False,
+                                    drop_last=False)
 
 
-PATH_MEAN = [0.7968, 0.6492, 0.7542]
-PATH_STD = [0.1734, 0.2409, 0.1845]
+    features_save_dir = create_features_dir(study_name, magnification, patch_size, num_layers)
+    if features_save_dir.is_dir():
+        shutil.rmtree(features_save_dir)
+    features_save_dir.mkdir(parents=True, exist_ok=True)
 
-model = create_model(args.num_layers, True, 1)
-model.fc = nn.Identity()
-model.cuda()
-model.eval()
+    for i, imgs in tqdm.tqdm(enumerate(dl), total=len(dl)):
+        ft_i = model(imgs.cuda())
+        torch.save(ft_i, features_save_dir / f"{i:06d}.pt")
 
-trf = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Resize(args.patch_size),
-    transforms.Normalize(PATH_MEAN, PATH_STD)
-])
-
-ds = SlidesDataset(df, transform=trf)
-dl = torch.utils.data.DataLoader(ds,
-                                 shuffle=False,
-                                 batch_size=args.batch_size,
-                                 num_workers=args.num_workers,
-                                 pin_memory=False,
-                                 drop_last=False)
-
-
-save_dir = f"features/{args.study}/mag_{args.magnification}-size_{args.patch_size}/resnet_{args.num_layers}/"
-if os.path.isdir(save_dir):
-    shutil.rmtree(save_dir)
-os.makedirs(
-    f"features/{args.study}/mag_{args.magnification}-size_{args.patch_size}/resnet_{args.num_layers}/",
-    exist_ok=True)
-
-for i, imgs in tqdm.tqdm(enumerate(dl), total=len(dl)):
-    ft_i = model(imgs.cuda())
-    torch.save(
-        ft_i,
-        f"features/{args.study}/mag_{args.magnification}-size_{args.patch_size}/resnet_{args.num_layers}/{i:06d}.pt"
-    )
+if __name__ == '__main__':
+    print_intro(__file__)
+    main()
+    print_outro(__file__)
