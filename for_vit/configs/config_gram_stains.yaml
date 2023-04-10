@@ -3,6 +3,7 @@ study:
   dataset_type: !!str GramStains
   svs_dir: !!str /pool2/users/jackm/dpool/data/svs
   json_path: !!str meta-files/gram_stains.json
+  stratify_by: !!str specimen_type
   num_folds: !!int 5
 
 tiles:
