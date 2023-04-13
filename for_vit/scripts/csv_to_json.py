@@ -2,8 +2,23 @@ import json
 import csv
 
 def csv_to_json(csv_file_path, json_file_path):
-    '''reads data from a CSV file stored at csv_file_path and 
-    converts the csv into a json file which is stored at json_file_path'''
+    """
+    Reads data from a CSV file at the given `csv_file_path`, converts it into a JSON file
+    and saves it at the given `json_file_path`.
+
+    Args:
+        csv_file_path (str): The path to the CSV file.
+        json_file_path (str): The path to the JSON file.
+
+    Returns:
+        None.
+
+    Raises:
+        FileNotFoundError: If the CSV file cannot be found at the given `csv_file_path`.
+
+    Example Usage:
+        csv_to_json('data.csv', 'data.json')
+    """
     
     temp = {} # used to store key-value pairs for each row of data
     keys = [] # stores the keys of the CSV file
