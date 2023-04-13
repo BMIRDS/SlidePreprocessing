@@ -1,13 +1,12 @@
-#Gram Stains dataset class
-#Example use argument: python 01_get_svs_meta.py --study_name gram_stains --dataset_type GramStains  
-# --svs_path /pool2/users/jackm/dpool/data/svs  --json_path meta-files/gram_stains.json --stratify_by specimen_type
+#IBD dataset class
+#This script is used with 01_get_svs_meta.py when the IBD dataset is loaded
 
 import json
 from pathlib import Path
 
 import pandas as pd
 
-from base import MetaFile
+from datasets.base import MetaFile
 
 class IBD(MetaFile):
     def __init__(self, study_name='', svs_path='', json_path='',
@@ -76,7 +75,7 @@ class IBD(MetaFile):
         df['study_name'] = self.study_name
         
         print(df.shape)
-        print(df.id_patient.unique().shape)
+        print(df.case_number.unique().shape)
         print(df.describe())
 
         return df
@@ -94,10 +93,6 @@ class IBD(MetaFile):
             lambda x: x.split('/')[5])
         df_svs['case_number'] = df_svs.case_number.apply(
             lambda x: x.split(' ')[0])
-
-        # I am not sure how to collect the id_svs information
-        # df_svs['id_svs'] = df_svs.svs_path.apply(
-        #     lambda x: x.split('-')[2].replace('.svs', ''))
 
         df_svs['study_name'] = self.study_name
         
