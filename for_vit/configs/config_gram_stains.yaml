@@ -1,0 +1,20 @@
+study:
+  study_name: !!str gram_stains
+  dataset_type: !!str GramStains
+  svs_dir: !!str /pool2/users/jackm/dpool/data/svs
+  json_path: !!str meta-files/gram_stains.json
+  stratify_by: !!str specimen_type
+  num_folds: !!int 5
+
+tiles:
+  tile_dir: !!str tiles
+  annotation_dir: !!str annotations
+  csv_in_path: !!str meta-files/gram_stains.csv
+  csv_out_path: !!str meta-files/gram_stains_tiles.csv
+  tile_compression_factor: !!float 1.5
+  tile_window_size: !!int 10000
+
+
+patch:
+  magnification: !!float 5
+  svs_meta: !!str meta/gram_stains_svs.pickle

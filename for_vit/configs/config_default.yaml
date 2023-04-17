@@ -26,7 +26,7 @@ study:
   # Please implement a dataset file if necessary
   dataset_type: !!str <SET_YOUR_OWN_VALUE>
 
-  # (1)
+  # (0,1)
   # Path to the folder containing svs data
   # Example: /pool2/data/WSI_TCGA/Colorectal
   svs_dir: !!str <SET_YOUR_OWN_VALUE>
@@ -43,6 +43,33 @@ study:
   # Number of folds for kfold cross validation
   num_folds: !!int 5
 
+tiles:
+  ## Tile configuration. Only needed if using 00_get_tiles.py. This preprocessing script is optional and used
+  # if your dataset requires splitting slides into smaller tiles as in gram_stains.
+  # (0)
+  # Path to the folder to write tile tif data
+  tile_dir: !!str <SET_YOUR_OWN_VALUE>
+
+  # (0)
+  # Path to the folder to write tile jpg data for annotation
+  annotation_dir: !!str <SET_YOUR_OWN_VALUE>
+
+  # (0)
+  # Path input cvs for tile production
+  csv_in_path: !!str <SET_YOUR_OWN_VALUE>
+
+  # (0)
+  # Path to the output tile cvs
+  csv_out_path: !!str <SET_YOUR_OWN_VALUE>
+
+  # (0)
+  # tile compression, downsizing resolution for output tif and jpeg tiles
+  # A factor of 1.5 downsizes a 60x slide to 40x
+  tile_compression_factor: !!float 1.5
+
+  # (0)
+  # tile size
+  tile_window_size: !!int 10000
 
 patch:
   # Patch Extraction Configuration
