@@ -44,6 +44,8 @@ study:
   num_folds: !!int 5
 
 tiles:
+  ## Tile configuration. Only needed if using 00_get_tiles.py. This preprocessing script is optional and used
+  # if your dataset requires splitting slides into smaller tiles as in gram_stains.
   # (0)
   # Path to the folder to write tile tif data
   tile_dir: !!str <SET_YOUR_OWN_VALUE>
@@ -54,14 +56,15 @@ tiles:
 
   # (0)
   # Path input cvs for tile production
-  csv_in_path_dir: !!str <SET_YOUR_OWN_VALUE>
+  csv_in_path: !!str <SET_YOUR_OWN_VALUE>
 
   # (0)
   # Path to the output tile cvs
-  csv_out_path_dir: !!str <SET_YOUR_OWN_VALUE>
+  csv_out_path: !!str <SET_YOUR_OWN_VALUE>
 
   # (0)
-  # tile compression
+  # tile compression, downsizing resolution for output tif and jpeg tiles
+  # A factor of 1.5 downsizes a 60x slide to 40x
   tile_compression_factor: !!float 1.5
 
   # (0)

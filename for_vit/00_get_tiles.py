@@ -26,18 +26,19 @@ https://github.com/BMIRDS/deepslide/blob/master/code/z_preprocessing/2_svs_to_jp
 """
 
 import argparse
-from pathlib import Path
 from math import ceil
+from pathlib import Path
+from PIL import Image
 
 import openslide
-from PIL import Image
 import pyvips
 import pandas as pd
 
 from utils.config import Config, default_options
 from utils.print_utils import print_intro, print_outro
 
-def output_jpeg_tiles(image_name, anno_subdir, tile_path, compression_factor, window_size):  
+def output_jpeg_tiles(image_name, anno_subdir, 
+                      tile_path, compression_factor, window_size):  
   
   img = openslide.OpenSlide(image_name)
   width, height = img.level_dimensions[0]
@@ -45,7 +46,7 @@ def output_jpeg_tiles(image_name, anno_subdir, tile_path, compression_factor, wi
   increment_x = int(ceil(width / window_size))
   increment_y = int(ceil(height / window_size))
 
-  print("converting", image_name, "with width", width, "and height", height)
+  print(f"[INFO] Converting {image_name} with width {width} and height {height}")
     
   index = 1
 
@@ -62,20 +63,27 @@ def output_jpeg_tiles(image_name, anno_subdir, tile_path, compression_factor, wi
       tile = img.read_region((begin_x, begin_y), 0, (tile_width, tile_height))
       tile.load()
       tile_rgb = Image.new("RGB", tile.size, (255, 255, 255))
-      tile_rgb.paste(tile, mask=tile.split()[3])
+      _, _, _, alpha = tile.split()
+      tile_rgb.paste(tile, mask=alpha)
  
-
+      width_resize = int(tile_rgb.size[0] / compression_factor)
+      height_resize = int(tile_rgb.size[1] / compression_factor)
+      
       # compress the image
-      tile_rgb = tile_rgb.resize((int(tile_rgb.size[0] / compression_factor), int(tile_rgb.size[1] / compression_factor)), Image.ANTIALIAS)
+      tile_rgb = tile_rgb.resize((width_resize, 
+                                  height_resize), Image.ANTIALIAS)
 
       # save the image
-      output_image_name = anno_subdir + '/' + image_name.split('/')[-1][:-4] + '_' + f"{index:03d}" + '.jpg'
+      output_image_name =f"{anno_subdir}/{Path(image_name).stem}_{index:03d}.jpg"
       tile_rgb.save(output_image_name)
             
       #convert to tiff
-      output_tif_name = tile_path + '_' + f"{index:03d}" + '.tif'
+      output_tif_name = f"{tile_path}_{index:03d}.tif"
+      
       vipsimage = pyvips.Image.new_from_file(output_image_name)
-      vipsimage.tiffsave(output_tif_name, compression="jpeg", tile=True, tile_width=512, tile_height=512, pyramid=True, bigtiff=True)
+      vipsimage.tiffsave(output_tif_name, compression="jpeg", 
+                         tile=True, tile_width=512, tile_height=512, 
+                         pyramid=True, bigtiff=True)
       
       index += 1
     
@@ -103,22 +111,26 @@ def main():
   tile_csv = pd.DataFrame()
 
   for f in files:
-    name = f.split('/')[-1]
-    anno_path = config.tiles.annotation_dir + '/' + name[:-4]
+    name = Path(f).stem
+    print(name)
+    anno_path = f"{config.tiles.annotation_dir}/{name}"
     subfolder_dir = Path(anno_path)
-    subfolder_dir.mkdir(exist_ok=True)
-    tile_path = config.tiles.tile_dir + '/' + name.split('.')[0]
+    subfolder_dir.mkdir(exist_ok=True, parents=True)
+    tile_path = f"{config.tiles.tile_dir}/{name}"
 
-    count = output_jpeg_tiles(f, anno_path, tile_path, config.tiles.tile_compression_factor, config.tiles.tile_window_size)
+    count = output_jpeg_tiles(f, anno_path, tile_path, 
+                              config.tiles.tile_compression_factor, 
+                              config.tiles.tile_window_size)
     
     # update csv with new rows for each tile
-    image_id = name.split('.')[0]
+    image_id = name
     
     row = in_csv.loc[image_id].copy()
     for i in range (1, count + 1):    
       new_row = row
-      # Identification by Tile ID column set for future processing, replaces "Image ID" and matches name of tif file
-      new_row.loc["Tile ID"] = image_id + '_' + f"{i:03d}"
+      # Identification by Tile ID column set for future processing
+      # replaces "Image ID" and matches name of tif file
+      new_row.loc["Tile ID"] = f"{image_id}_{i:03d}"
       tile_csv = tile_csv.append(new_row)
       
   tile_csv.to_csv(config.tiles.csv_out_path, index=False)
