@@ -27,7 +27,7 @@ https://github.com/BMIRDS/deepslide/blob/master/code/z_preprocessing/2_svs_to_jp
 
 import argparse
 from math import ceil
-from pathlib import Path
+from pathlib import Path, PurePath
 from PIL import Image
 
 import openslide
@@ -74,14 +74,15 @@ def output_jpeg_tiles(image_name, anno_subdir,
                                   height_resize), Image.ANTIALIAS)
 
       # save the image
-      output_image_name =f"{anno_subdir}/{Path(image_name).stem}_{index:03d}.jpg"
-      tile_rgb.save(output_image_name)
+      output_image_name = PurePath(f"{Path(image_name).stem}_{index:03d}").with_suffix('.jpg')
+      output_image_path = Path(anno_subdir) / output_image_name 
+      tile_rgb.save(str(output_image_path))
             
       #convert to tiff
-      output_tif_name = f"{tile_path}_{index:03d}.tif"
+      output_tif_path = PurePath(f"{tile_path}_{index:03d}").with_suffix('.tif')
       
-      vipsimage = pyvips.Image.new_from_file(output_image_name)
-      vipsimage.tiffsave(output_tif_name, compression="jpeg", 
+      vipsimage = pyvips.Image.new_from_file(str(output_image_path))
+      vipsimage.tiffsave(str(output_tif_path), compression="jpeg", 
                          tile=True, tile_width=512, tile_height=512, 
                          pyramid=True, bigtiff=True)
       
@@ -112,13 +113,11 @@ def main():
 
   for f in files:
     name = Path(f).stem
-    print(name)
-    anno_path = f"{config.tiles.annotation_dir}/{name}"
-    subfolder_dir = Path(anno_path)
-    subfolder_dir.mkdir(exist_ok=True, parents=True)
-    tile_path = f"{config.tiles.tile_dir}/{name}"
+    annotation_subdir_path = Path(config.tiles.annotation_dir) / name
+    annotation_subdir_path.mkdir(exist_ok=True, parents=True)
+    tile_path = Path(config.tiles.tile_dir) / name
 
-    count = output_jpeg_tiles(f, anno_path, tile_path, 
+    count = output_jpeg_tiles(f, str(annotation_subdir_path), str(tile_path), 
                               config.tiles.tile_compression_factor, 
                               config.tiles.tile_window_size)
     
