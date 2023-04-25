@@ -36,12 +36,13 @@ from utils.io_utils import create_slide_meta_dir
 def call_get_patches(params):
     return get_patches(*params)
 
-def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int, magnification: float):
+def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int, magnification: float, mag_ori: float):
     try:
         wsi = WsiSampler(svs_path=svs_fname,
                          svs_root=svs_root,
                          study=study,
-                         saturation_enhance=0.5)
+                         saturation_enhance=0.5,
+                         mag_ori=mag_ori)
         _, save_dirs, _, _, _ = wsi.sample_sequential(0, 100000,
                                                       patch_size,
                                                       magnification)
@@ -69,6 +70,7 @@ def main():
 
     svs_path = config.optional.svs_path
     study_name = config.study.study_name
+  
     if svs_path is not None:
         svs_path = Path(svs_path)
         svs_fname = svs_path.name
@@ -78,12 +80,18 @@ def main():
              svs_folder, 
              study_name,
              config.patch.patch_size,
-             config.patch.magnification)]
+             config.patch.magnification,
+             config.patch.original_magnification)]
     else:
         df_sub = pd.read_pickle(config.patch.svs_meta)
         paired_inputs = []
         for i, row in df_sub.iterrows():
-            svs_fname = f"{row['id_svs']}.svs"
+            if config.patch.from_tiles:
+                #use tif if config set to tile input
+                svs_fname = f"{row['id_svs']}.tif"
+            else:
+                #otherwise svs is default
+                svs_fname = f"{row['id_svs']}.svs"
             full_path = Path(row['svs_path'])
             svs_folder = str(full_path.parent)
             paired_inputs.append(
@@ -91,7 +99,8 @@ def main():
                  svs_folder,
                  study_name,
                  config.patch.patch_size,
-                 config.patch.magnification))
+                 config.patch.magnification,
+                 config.patch.original_magnification))
 
     _ = process_map(call_get_patches,
                     paired_inputs, 

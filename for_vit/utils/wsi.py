@@ -46,6 +46,36 @@ def fix_thumbnail(img):
     img = img[:new_x, :new_y, :]
     return img
 
+def get_original_magnification(slide: openslide.OpenSlide):
+    ERR_RANGE = 10  # in %
+    ERR_RANGE = ERR_RANGE / 100
+    objective_power = None
+    if 'openslide.objective-power' in slide.properties:
+        objective_power = float(slide.properties.get('openslide.objective-power'))
+
+    elif 'openslide.mpp-x' in slide.properties:
+        objective_power = 10 / float(slide.properties.get('openslide.mpp-x'))
+
+    else:
+        print("[INFO] Magnification is not available.")
+        return objective_power
+
+    """Objective Power is often not accurate; it should typically be 10, 20, or
+    40. Thus need rounding. ex) 41.136... -> 40
+    """
+    objective_power_candidates = [10, 20, 40, 60]
+    calibrated = False
+    for candidate in objective_power_candidates:
+        if candidate * (1 - ERR_RANGE) <= objective_power and\
+         objective_power <= candidate * (1 + ERR_RANGE):
+            objective_power = candidate
+            calibrated = True
+            break
+    if not calibrated:
+        print(f"[INFO] Magnification is not standard value: {objective_power}")
+
+    return objective_power
+
 
 class WSI:
     """
@@ -57,7 +87,8 @@ class WSI:
                  svs_root,
                  save_cache=True,
                  load_cache=False,
-                 cache_dir='patches/'):
+                 cache_dir='patches/',
+                 mag_ori=None):
         '''
         High level class to extract patches from whole slide images
         svs_path
@@ -70,10 +101,15 @@ class WSI:
 
         if load_cache:
             pass
+        elif mag_ori:
+            self.slide = openslide.OpenSlide(os.path.join(svs_root, svs_path))
+            self.mag_ori = mag_ori
         else:
             self.slide = openslide.OpenSlide(os.path.join(svs_root, svs_path))
-            self.mag_ori = int(
-                float(self.slide.properties.get('aperio.AppMag', 40)))
+            self.mag_ori = get_original_magnification(self.slide)
+            if (self.mag_ori is None):
+                raise Exception("Can't find original magnification info from slide, set value in config")
+            
         self.cache_dir = cache_dir
         self.save_cache = save_cache
         self.load_cache = load_cache
@@ -98,6 +134,7 @@ class WSI:
 
     def get_region(self, x, y, size, mag, mag_mask):
         svs_id = self.svs_path.replace('.svs', '')
+        svs_id = self.svs_path.replace('.tif', '')
         save_dir = os.path.join(self.cache_dir,
                                 f"mag_{str(mag)}-size_{str(size)}", svs_id,
                                 f"{x:05d}", f"{y:05d}.jpeg")
@@ -161,7 +198,8 @@ class WsiMask:
                  mag_mask=0.3125,
                  cache_dir='caches',
                  load_cache=False,
-                 saturation_enhance=1):
+                 saturation_enhance=1,
+                 mag_ori=None):
         self.svs_path = svs_path
         self.mag_mask = mag_mask
         self.cache_dir = cache_dir
@@ -172,7 +210,8 @@ class WsiMask:
                        self.svs_root,
                        load_cache=False,
                        save_cache=False,
-                       cache_dir=None)
+                       cache_dir=None,
+                       mag_ori=mag_ori)
         self.im_low_res = self.wsi.downsample(self.mag_mask)
         self.load_cache = load_cache
         self.get_mask()
@@ -269,8 +308,10 @@ class WsiMask:
         self.mask = mask
 
     def _mask_path(self, svs_path):
+        svs_path = svs_path.replace('.svs', '-mask.npy')
+        svs_path = svs_path.replace('.tif', '-mask.npy')
         save_path = os.path.join(self.cache_dir, 'masks', self.study,
-                                 svs_path.replace('.svs', '-mask.npy'))
+                                 svs_path)
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         return save_path
 
@@ -285,11 +326,13 @@ class WsiSampler:
                  svs_root='/pool2/data/WSI_NHCR',
                  study='TCGA',
                  mag_mask=0.3125,
-                 saturation_enhance=1):
+                 saturation_enhance=1,
+                 mag_ori=None):
         self.ms = WsiMask(svs_path=svs_path,
                           svs_root=svs_root,
                           study=study,
-                          saturation_enhance=saturation_enhance)
+                          saturation_enhance=saturation_enhance,
+                          mag_ori=mag_ori)
         self.mag_mask = mag_mask
         self.svs_path = svs_path
         self.study = study
@@ -297,7 +340,8 @@ class WsiSampler:
                        svs_root,
                        load_cache=load_cache,
                        save_cache=save_cache,
-                       cache_dir=os.path.join(cache_dir, study))
+                       cache_dir=os.path.join(cache_dir, study),
+                       mag_ori=mag_ori)
         self.positions = None
 
     def sample(self, size, n=1, mag=10, tile_size=None):

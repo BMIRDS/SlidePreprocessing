@@ -103,6 +103,7 @@ class TCGA(MetaFile):
             self.df.id_patient)].reset_index(drop=True)
         df_svs['id_svs'] = df_svs.svs_path.apply(
             lambda x: x.split('/')[-1].replace('.svs', ''))
+        df_svs['study_name'] = self.study_name
         df_svs['cancer'] = self.study_name
         df_svs['slide_type'] = df_svs.id_svs.apply(lambda x: x.split('-')[3])
 

@@ -35,7 +35,7 @@ def main():
     study_name = config.study.study_name
     df_meta = pd.read_pickle(config.patch.svs_meta)
     print("[INFO] ", df_meta.shape)
-    df_sub = df_meta.loc[df_meta.cancer == study_name]
+    df_sub = df_meta.loc[df_meta.study_name == study_name]
     res = []
     for slide_id in tqdm.tqdm(df_sub.id_svs.unique()):
         try:
@@ -50,12 +50,11 @@ def main():
             print(traceback.format_exc())
 
     patch_dir = create_patches_dir(study_name, magnification, patch_size)
-    svs_ids = [p.name for p in patch_dir.glob("*")]
-
+    svs_ids = [p.name.split('.')[0] for p in patch_dir.glob("*")]
+    
     df = pd.concat(res)
     df = df.loc[df.id_svs.isin(svs_ids)].reset_index(drop=True)
-
-
+    
     # TODO: NEED TO USE RE
     if study_name.split('_')[0] == 'TCGA':
         df['id_patient'] = df.file.apply(lambda x: x.split('/')[-3][0:12])
@@ -63,7 +62,6 @@ def main():
     else:
         df['id_patient'] = df['id_svs']
         df['type'] = '01Z'
-
     print("[INFO] ", df.type.value_counts())
     print("[INFO] ", df.id_patient.head())
     print("[INFO] ", df.id_svs.head())
