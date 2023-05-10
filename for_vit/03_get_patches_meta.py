@@ -50,8 +50,7 @@ def main():
             print(traceback.format_exc())
 
     patch_dir = create_patches_dir(study_name, magnification, patch_size)
-    svs_ids = [p.name.split('.')[0] for p in patch_dir.glob("*")]
-    #svs_ids = [p.name for p in patch_dir.glob("*")]
+    svs_ids = [p.name.replace(config.study.image_extension, '')for p in patch_dir.glob("*")]
     
     df = pd.concat(res)
     df = df.loc[df.id_svs.isin(svs_ids)].reset_index(drop=True)
