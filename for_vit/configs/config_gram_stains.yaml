@@ -5,6 +5,7 @@ study:
   json_path: !!str meta-files/gram_stains_tiles.json
   stratify_by: !!str tile_annotation
   num_folds: !!int 5
+  image_extension: !!str .tif
 
 tiles:
   svs_dir_for_tiles: /pool2/users/jackm/dpool/data/svs
@@ -21,4 +22,3 @@ patch:
   original_magnification: !!float 40
   svs_meta: !!str meta/gram_stains_svs.pickle
   patch_size: !!int 224
-  from_tiles: !!bool True

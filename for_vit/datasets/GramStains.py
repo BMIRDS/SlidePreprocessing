@@ -69,6 +69,7 @@ class GramStains(MetaFile):
         df['id_patient'] = df.tile_id
         df['study_name'] = self.study_name
         
+        # remove slides that have both gram positive and negativ bacteria
         df.drop(df[df['tile_annotation'] == "Both"].index, inplace = True)
         
         print(f"[INFO] Data Frame Shape: {df.shape}")

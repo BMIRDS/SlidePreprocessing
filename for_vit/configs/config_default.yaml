@@ -44,6 +44,10 @@ study:
   # Number of folds for kfold cross validation
   num_folds: !!int 5
 
+  # (2)
+  # Tells get_patches to look for tif files instead of svs
+  image_extension: !!str .svs
+
 tiles:
   ## Tile configuration. Only needed if using 00_get_tiles.py. This preprocessing script is optional and used
   # if your dataset requires splitting slides into smaller tiles as in gram_stains.
@@ -92,10 +96,6 @@ patch:
   # (2, 3, 4, 5)
   # Size of the extracted patches
   patch_size: !!int 224
-
-  # (2)
-  # Tells get_patches to look for tif files instead of svs
-  from_tiles: !!bool False
 
   # (2, 3, 5)
   # Path to the pickle file containing metadata for the .svs files

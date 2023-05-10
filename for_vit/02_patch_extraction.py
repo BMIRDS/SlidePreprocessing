@@ -86,12 +86,7 @@ def main():
         df_sub = pd.read_pickle(config.patch.svs_meta)
         paired_inputs = []
         for i, row in df_sub.iterrows():
-            if config.patch.from_tiles:
-                #use tif if config set to tile input
-                svs_fname = f"{row['id_svs']}.tif"
-            else:
-                #otherwise svs is default
-                svs_fname = f"{row['id_svs']}.svs"
+            svs_fname = f"{row['id_svs']}{config.study.image_extension}"
             full_path = Path(row['svs_path'])
             svs_folder = str(full_path.parent)
             paired_inputs.append(

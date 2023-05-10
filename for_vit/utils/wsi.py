@@ -47,6 +47,7 @@ def fix_thumbnail(img):
     return img
 
 def get_original_magnification(slide: openslide.OpenSlide):
+    # Adapted from: https://github.com/BMIRDS/TCGA-SlidePipeline/blob/main/SlidePrep/slideprep/utils/microscope.py
     ERR_RANGE = 10  # in %
     ERR_RANGE = ERR_RANGE / 100
     objective_power = None
@@ -108,7 +109,7 @@ class WSI:
             self.slide = openslide.OpenSlide(os.path.join(svs_root, svs_path))
             self.mag_ori = get_original_magnification(self.slide)
             if (self.mag_ori is None):
-                raise Exception("Can't find original magnification info from slide, set value in config")
+                raise Exception("WARNING: Can't find original magnification info from slide, set value in config")
             
         self.cache_dir = cache_dir
         self.save_cache = save_cache
@@ -133,6 +134,7 @@ class WSI:
         return [np.array(img.convert('RGB')) for img in imgs]
 
     def get_region(self, x, y, size, mag, mag_mask):
+        # TODO: replace with image_extension from config 
         svs_id = self.svs_path.replace('.svs', '')
         svs_id = self.svs_path.replace('.tif', '')
         save_dir = os.path.join(self.cache_dir,
@@ -308,6 +310,7 @@ class WsiMask:
         self.mask = mask
 
     def _mask_path(self, svs_path):
+        # TODO: replace with image_extension from config 
         svs_path = svs_path.replace('.svs', '-mask.npy')
         svs_path = svs_path.replace('.tif', '-mask.npy')
         save_path = os.path.join(self.cache_dir, 'masks', self.study,
