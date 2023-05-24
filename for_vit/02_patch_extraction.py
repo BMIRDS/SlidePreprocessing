@@ -36,7 +36,8 @@ from utils.io_utils import create_slide_meta_dir
 def call_get_patches(params):
     return get_patches(*params)
 
-def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int, magnification: float, mag_ori: float):
+def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int,
+                magnification: float, mag_ori: float):
     try:
         wsi = WsiSampler(svs_path=svs_fname,
                          svs_root=svs_root,

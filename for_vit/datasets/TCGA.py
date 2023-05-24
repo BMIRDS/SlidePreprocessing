@@ -92,6 +92,8 @@ class TCGA(MetaFile):
     #produces self.df_svs by reading info from svs file names from input svs folder
     def parse_svs(self):
         
+        
+        #TODO: Use image extension from config
         files = [str(p) for p in Path(self.svs_path).rglob('*.svs')]
         print(f"[INFO] {len(files)} files found!")
 
@@ -102,7 +104,7 @@ class TCGA(MetaFile):
         df_svs = df_svs.loc[df_svs.id_patient.isin(
             self.df.id_patient)].reset_index(drop=True)
         df_svs['id_svs'] = df_svs.svs_path.apply(
-            lambda x: x.split('/')[-1].replace('.svs', ''))
+            lambda x: Path(x).stem)
         df_svs['study_name'] = self.study_name
         df_svs['cancer'] = self.study_name
         df_svs['slide_type'] = df_svs.id_svs.apply(lambda x: x.split('-')[3])

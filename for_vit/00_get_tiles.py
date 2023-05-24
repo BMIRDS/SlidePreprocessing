@@ -37,8 +37,14 @@ import pandas as pd
 from utils.config import Config, default_options
 from utils.print_utils import print_intro, print_outro
 
-def output_jpeg_tiles(image_name, anno_subdir, 
-                      tile_path, compression_factor, window_size):  
+def output_jpeg_tiles(image_name: str, anno_subdir: str, 
+                      tile_path: str, compression_factor: float, window_size: int): 
+  """
+  Helper function to use OpenSlide to process input slide into jpg and tif tiles.
+  Saves jpg files to anno_subdir and tif files to tile_path
+  Dimensions of tiles determined by compression factor and window_size.
+  See docstring above for more arg details.
+  """
   img = openslide.OpenSlide(image_name)
   
   width, height = img.level_dimensions[0]

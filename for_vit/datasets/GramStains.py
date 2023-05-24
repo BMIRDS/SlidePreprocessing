@@ -81,13 +81,13 @@ class GramStains(MetaFile):
     #produces self.df_svs by reading info from svs file names from input svs folder
     def parse_svs(self):
         
-        files = [str(p) for p in Path(self.svs_path).rglob('*.tif')]
+        files = [str(p) for p in Path(self.svs_path).rglob('*')]
         print(f"[INFO] {len(files)} files found!")
 
         df_svs = pd.DataFrame(files, columns=['svs_path'])
 
         df_svs['id_patient'] = df_svs.svs_path.apply(
-            lambda x: x.split('/')[-1].replace('.tif', ''))
+            lambda x: Path(x).stem)
         
         df_svs = df_svs.loc[df_svs.id_patient.isin(
             self.df.id_patient)].reset_index(drop=True)

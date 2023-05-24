@@ -17,6 +17,7 @@ python get_patch_meta.py -c TCGA_BLCA -s 224 -m 10 --svs-meta meta/dhmc_rcc_svs.
 
 """
 
+from pathlib import Path
 import traceback
 
 import pandas as pd
@@ -50,7 +51,8 @@ def main():
             print(traceback.format_exc())
 
     patch_dir = create_patches_dir(study_name, magnification, patch_size)
-    svs_ids = [p.name.replace(config.study.image_extension, '')for p in patch_dir.glob("*")]
+    #svs_ids = [p.name.replace(config.study.image_extension, '') for p in patch_dir.glob("*")]
+    svs_ids = [Path(p.name).stem for p in patch_dir.glob("*")]
     
     df = pd.concat(res)
     df = df.loc[df.id_svs.isin(svs_ids)].reset_index(drop=True)
