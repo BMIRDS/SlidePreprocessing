@@ -459,11 +459,18 @@ class WsiSampler:
 
     def sample_sequential(self, idx, n, size, mag):
         """
+        This function is the main driver behind storing coordinates of the
+        regions/patches that have tissue and calling functions to extract and save
+        such patches from the WSI
+        
         Args:
             idx (int): index of the batch
             n (int): number of patches per batch
             size (int): size of the patch
             mag (int): magnification of the patch
+        Returns:
+            imgs (list): list of images (np arrays)
+            save_dirs (list): list of save directories
         """
         if self.positions is None:
             self.pos_tile, pos_left = self.ms.sample_all(size,
@@ -478,8 +485,10 @@ class WsiSampler:
         imgs = []
         save_dirs = []
         for pos_i in pos:
+            # start the process of extracting the patch from the WSI
             img, save_dir = self.wsi.get_region(pos_i[1], pos_i[0], size, mag,
                                                 mag / size)
+            # add the images to imgs list and the save_dir to save_dirs list
             imgs.append(img)
             save_dirs.append(save_dir)
         return imgs, save_dirs, self.pos_tile, pos, pos
