@@ -13,6 +13,19 @@ from .filter import filter_composite
 
 
 def combined_view(thumbnail, mask, fname):
+    """
+    This function combines the thumbnail and mask images and saves the figure.
+    The function also saves the thumbnail and mask images separately.
+    
+    Args:
+        thumbnail(np.array): thumbnail image
+        mask(np.array): mask image (binary)
+        fname(str): file name to save the figure
+    Returns:
+        None
+    """
+
+    # plotting the visualization of mask overlay on thumbnail
     fig = plt.figure()
     ax1 = fig.add_axes((0, 0, 1, 1), label='thumbnail')
     ax2 = fig.add_axes((0, 0, 1, 1), label='mask')
@@ -23,6 +36,7 @@ def combined_view(thumbnail, mask, fname):
     plt.savefig(fname, bbox_inches='tight', pad_inches=0)
     plt.close()
 
+    # plotting the thumnail
     plt.imshow(thumbnail)
     plt.axis('off')
     plt.savefig(fname.replace('-overlay', '-thumbnail'),
@@ -30,6 +44,7 @@ def combined_view(thumbnail, mask, fname):
                 pad_inches=0)
     plt.close()
 
+    # plotting the mask
     plt.imshow(mask)
     plt.axis('off')
     plt.savefig(fname.replace('-overlay', '-mask'),
@@ -39,11 +54,25 @@ def combined_view(thumbnail, mask, fname):
 
 
 def fix_thumbnail(img):
+    """
+    This function cropts the img and returns it
+    Args:
+        img(np.array): input image to be resized and cropped
+    Returns:
+        img(np.array): adjusted cropped image
+    """
+
+    # getting width, height dimensions of image
     size_y, size_x, _ = img.shape
+
+    # calculating the downscale factor based on magnification, mag_mask, and patch_size (TODO: fix hardcoded values)
     down_scale = 10 / 0.3125 / 224
     max_x, max_y = int(size_x * down_scale), int(size_y * down_scale)
     new_y, new_x = int(max_x / down_scale), int(max_y / down_scale)
+
+    # cropts the image
     img = img[:new_x, :new_y, :]
+
     return img
 
 
@@ -124,18 +153,52 @@ class WSI:
         return np.array(img), save_dir
 
     def downsample(self, mag):
+        """
+        This function downsamples the image to the desired magnification
+        Args:
+            mag (float): magnification to downsample to
+        Returns:
+            img (np array): downsampled image
+        """
+
+        # calculate downsample factor based on original magnification and desired magnification of the patches
+        # to redduce the size of the image
         dsf = self.mag_ori / mag
+
+        # gets best level based on the downsample factor calculated above
         level = self.get_best_level_for_downsample(dsf)
+
+        # based on the downsample factor and the best level, calculate the new magnification
         mag_new = self.mag_ori / (
             [int(x) for x in self.slide.level_downsamples][level])
+
+        # calculate the new downsample factor based on the new magnification
         dsf_new = self.mag_ori / mag_new
+
+        # Reads a region of the slide at the selected level and based on the adjusted dimensions. 
+        # Uses the read_region function from the self.slide object to retrieve the image region.
         img = self.slide.read_region(
             (0, 0), level,
             tuple(int(x / dsf_new) for x in self.slide.dimensions))
+
+        # sizes is a tuple of the new dimensions of the downsampled image
         sizes = tuple(int(x // dsf) for x in self.slide.dimensions)
+
+        # returns the downsampled image as a numpy array in RGB format
         return np.array(img.convert('RGB').resize(sizes))
 
     def get_best_level_for_downsample(self, factor):
+        """
+        Gets the best level for a given downsample factor based on properties of the WSI.
+        If the factor is greater than the value at the highest level, the highest level is returned
+        where the levels are the indices. If the factor is equal to the value at a level, that level is returned.
+        If the factor is less than the value at a level, the previous level is returned.
+
+        Args:
+            factor: downsample factor
+        Returns:
+            level: most appropriate level of the slide
+        """
         levels = [int(x) for x in self.slide.level_downsamples]
 
         for i, level in enumerate(levels):
@@ -145,7 +208,7 @@ class WSI:
                 continue
             elif factor < level:
                 return max(i - 1, 0)
-
+        
         return len(levels) - 1
 
 
@@ -255,19 +318,33 @@ class WsiMask:
             threshold (float): the threshold of the tissue
         
         Returns:
-
+            numpy array: stores zeroes (TODO: possible placeholder)
+            pos (numpy array): stores the coordinates of patches where tissue is present in the WSI thumnail
         """
+
+        # path_tissue_pct represents a 'map' where each entry corresponds to a tissue percentage in a patch of the original WSI
         patch_tissue_pct = self.get_tissue_map(patch_size, mag)
+
+        # patch_mask represents a binary 'map' based on the threshold
         patch_mask = patch_tissue_pct > threshold
+
+        # smoothing out the masks
         patch_mask = remove_small_holes(patch_mask, 10)
         patch_mask = remove_small_objects(patch_mask, 10)
+
+        # adjsts the thumbnail of the WSI which has been downsampled to mag_mask
         thumbnail = fix_thumbnail(self.im_low_res.copy())
+        
+        # saving images of the overlay the mask on the thumbnail
         combined_view(
             thumbnail, patch_mask,
             self._mask_path(self.svs_path).replace(
                 'mask.npy', 'visualization-patch-overlay.jpeg'))
+
+        # list of pixel coordinates w.r.t. thumnail image of the patches where the mask is true (where tissue is present)
         pos = np.stack(np.where(patch_mask)).swapaxes(1, 0)
-        return np.zeros(2).astype(int), pos, pos
+
+        return np.zeros(2).astype(int), pos
 
     def get_mask(self):
         # get the mask
@@ -354,7 +431,7 @@ class WsiSampler:
             mag (int): magnification of the patch
         """
         if self.positions is None:
-            self.pos_tile, pos_left, _ = self.ms.sample_all(size,
+            self.pos_tile, pos_left = self.ms.sample_all(size,
                                                             mag,
                                                             threshold=0.05)
             self.positions = pos_left.tolist()
