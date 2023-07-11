@@ -126,10 +126,32 @@ class WSI:
         return [np.array(img.convert('RGB')) for img in imgs]
 
     def get_region(self, x, y, size, mag, mag_mask):
+        """
+        Given the (x, y) location of the region/patch in the thumbnail, this function extracts the patch from the WSI.
+        This function proceeds to save the patch in a directory based on the magnification and size of the patch.
+        The .jpeg file is stored in nested directories based on the (x, y) location of the region/patch w.r.t. the thumbnail.
+        Args:
+            x(int): x coordinate of location of patch w.r.t. thumbnail
+            y(int): y coordinate of location of patch w.r.t. thumbnail
+            size(int): size of patch to be extracted
+            mag(int): magnification of patch to be extracted
+            mag_mask(int): magnification of mask
+        Returns:
+            img(np.array): image of patch
+            save_dir(str): directory where the patch is saved
+        """
         svs_id = self.svs_path.replace('.svs', '')
+
+        print(f"svs_id: {svs_id}, x: {x}, y: {y}, size: {size}, mag: {mag}, mag_mask: {mag_mask}")
+        
+        # constructing the save directory where the patches will be saved
+        # the jpeg files are saved with names based on their x and y coordinates in the thumbnail
         save_dir = os.path.join(self.cache_dir,
                                 f"mag_{str(mag)}-size_{str(size)}", svs_id,
                                 f"{x:05d}", f"{y:05d}.jpeg")
+        
+        print(f"save_dir: {save_dir}")
+
         if os.path.isfile(save_dir):
             return None, save_dir
 
@@ -137,19 +159,32 @@ class WSI:
             img = Image.open(save_dir)
             img = np.array(img)
         else:
+            # Calculating downsampling factors, level, etc.
             dsf = self.mag_ori / mag
+            print(f"dsf with mag_ori: {dsf}")
             level = self.get_best_level_for_downsample(dsf)
+            print(f"level: {level}")
             mag_new = self.mag_ori / (
                 [int(x) for x in self.slide.level_downsamples][level])
+            print(f"mag_new: {mag_new}")
             dsf = mag_new / mag
+            print(f"dsf with mag_new: {dsf}")
             dsf_mask = self.mag_ori / mag_mask
+            print(f"dsf_mask: {dsf_mask}")
+
+            print(f"Parameters being passed into slide_region: {(int(x * dsf_mask), int(y * dsf_mask)), level, (int(size * dsf), int(size * dsf))}")
+            # Passing in the coordinates of the actual WSI from the coords of the thumbnail, the level, and the size of the patch to read_region
+            # Documentation of read_region: https://openslide.org/api/python/
             img = self.slide.read_region(
                 (int(x * dsf_mask), int(y * dsf_mask)), level,
                 (int(size * dsf), int(size * dsf)))
+            # Converting the image to RGB and resizing it to the desired size
             img = img.convert('RGB').resize((size, size))
             if self.save_cache:
                 os.makedirs(os.path.dirname(save_dir), exist_ok=True)
+                # saving the image at the save_dir location
                 img.save(save_dir)
+    
         return np.array(img), save_dir
 
     def downsample(self, mag):
@@ -435,6 +470,9 @@ class WsiSampler:
                                                             mag,
                                                             threshold=0.05)
             self.positions = pos_left.tolist()
+        
+        # pos contains up to n coordinates w.r.t. WSI thumbnail. These coordinates
+        # represent the location of the patches that have tissue present
         pos = self.positions[(idx * n):(idx * n + n)]
 
         imgs = []
