@@ -215,18 +215,48 @@ class WsiMask:
             1, 0), (tile_loc + patch_locs).swapaxes(1, 0)
 
     def get_tissue_map(self, patch_size, mag):
+        """
+        Get a "map" where each entry corresponds to a tissue percentage in a patch of the original WSI.
+
+        Args:
+            patch_size (int): the size of the patch
+            mag (float): the magnification of the patch
+        Returns:
+            patch_tissue_pct (2D numpy array): a "map" where each entry corresponds to a tissue percentage in a patch of the original WSI.
+        """
+
+        # ratio of reqested magnification level of patch extraction to the magnification level of the mask
         scale_factor = mag / self.mag_mask
+
+        # block_size represents the size of the patches in the binary tissue mask
+        # block_size * scale_factor = size of patch in the requested magnification level
         block_size = int(patch_size / scale_factor)
         h, w = self.mask.shape
+
+        # new_h and new_w represent the dimensions of the resized mask to the scale_factor
         new_h = int(h / (patch_size / scale_factor) * block_size)
         new_w = int(w / (patch_size / scale_factor) * block_size)
+
+        # resize the mask to the new dimensions
         mask = resize(self.mask, (new_h, new_w))
+        
         patch_stacked_mask = view_as_windows(mask, (block_size, block_size),
                                              step=block_size)
+        # patch_tissue_pct is the percentage of tissue in each patch
         patch_tissue_pct = patch_stacked_mask.mean(axis=(2, 3))
+
         return patch_tissue_pct
 
     def sample_all(self, patch_size, mag, threshold):
+        """
+        Args:
+            patch_size (int): the size of the patch
+            mag (float): the magnification of the patch
+            threshold (float): the threshold of the tissue
+        
+        Returns:
+
+        """
         patch_tissue_pct = self.get_tissue_map(patch_size, mag)
         patch_mask = patch_tissue_pct > threshold
         patch_mask = remove_small_holes(patch_mask, 10)
@@ -316,6 +346,13 @@ class WsiSampler:
         return imgs, save_dirs, pos_tile, pos_l, pos_g
 
     def sample_sequential(self, idx, n, size, mag):
+        """
+        Args:
+            idx (int): index of the batch
+            n (int): number of patches per batch
+            size (int): size of the patch
+            mag (int): magnification of the patch
+        """
         if self.positions is None:
             self.pos_tile, pos_left, _ = self.ms.sample_all(size,
                                                             mag,
