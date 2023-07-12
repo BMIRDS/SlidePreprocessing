@@ -78,7 +78,7 @@ def fix_thumbnail(img):
 
 class WSI:
     """
-    using openslide
+    High level class to extract patches from whole slide images; using openslide
     """
 
     def __init__(self,
@@ -88,29 +88,52 @@ class WSI:
                  load_cache=False,
                  cache_dir='patches/'):
         '''
-        High level class to extract patches from whole slide images
-        svs_path
-        save_cache: save cropped patches
-        load_cache: load saved caches (patches)
-        cache_dir: directory to saved patches
+        Args:
+            svs_path (str): path to WSI
+            save_cache (bool): save cropped patches
+            load_cache (bool): load saved caches (patches)
+            cache_dir (str): directory to saved patches
         '''
+
+        # path and root directory of WSI
         self.svs_path = svs_path
         self.svs_root = svs_root
 
         if load_cache:
             pass
         else:
+            # self.slide is an OpenSlide object representing the slide belonging to the svs_path
             self.slide = openslide.OpenSlide(os.path.join(svs_root, svs_path))
+            
+            # obtaining the original magnification of the WSI; default is 40 if not found
             self.mag_ori = int(
                 float(self.slide.properties.get('aperio.AppMag', 40)))
+        
         self.cache_dir = cache_dir
         self.save_cache = save_cache
         self.load_cache = load_cache
 
     def _extract(self, loc):
+        """
+        Documentation: https://openslide.org/api/python/
+        Args:
+            loc(tuple): (x, y) representing top left corner of region to be extracted
+        Returns:
+            img(PIL.Image): image of patch
+        """
         return self.slide.read_region(loc, self.level, self.size)
 
     def get_multiples(self, xs, ys, size, mag, mag_mask):
+        """
+        Args:
+            xs (list): list of x coordinates of patches to be extracted
+            ys (list): list of y coordinates of patches to be extracted
+            size (int): size of patch
+            mag (int): magnification of patch to be extracted
+            mag_mask (int): magnification of mask
+        Returns:
+            imgs (list): list of PIL.Image objects
+        """
         dsf = self.mag_ori / mag
         self.level = self.get_best_level_for_downsample(dsf)
         mag_new = self.mag_ori / (
@@ -142,7 +165,7 @@ class WSI:
         """
         svs_id = self.svs_path.replace('.svs', '')
 
-        print(f"svs_id: {svs_id}, x: {x}, y: {y}, size: {size}, mag: {mag}, mag_mask: {mag_mask}")
+        # print(f"svs_id: {svs_id}, x: {x}, y: {y}, size: {size}, mag: {mag}, mag_mask: {mag_mask}")
         
         # constructing the save directory where the patches will be saved
         # the jpeg files are saved with names based on their x and y coordinates in the thumbnail
@@ -150,7 +173,7 @@ class WSI:
                                 f"mag_{str(mag)}-size_{str(size)}", svs_id,
                                 f"{x:05d}", f"{y:05d}.jpeg")
         
-        print(f"save_dir: {save_dir}")
+        # print(f"save_dir: {save_dir}")
 
         if os.path.isfile(save_dir):
             return None, save_dir
@@ -161,18 +184,18 @@ class WSI:
         else:
             # Calculating downsampling factors, level, etc.
             dsf = self.mag_ori / mag
-            print(f"dsf with mag_ori: {dsf}")
+            # print(f"dsf with mag_ori: {dsf}")
             level = self.get_best_level_for_downsample(dsf)
-            print(f"level: {level}")
+            # print(f"level: {level}")
             mag_new = self.mag_ori / (
                 [int(x) for x in self.slide.level_downsamples][level])
-            print(f"mag_new: {mag_new}")
+            # print(f"mag_new: {mag_new}")
             dsf = mag_new / mag
-            print(f"dsf with mag_new: {dsf}")
+            # print(f"dsf with mag_new: {dsf}")
             dsf_mask = self.mag_ori / mag_mask
-            print(f"dsf_mask: {dsf_mask}")
+            # print(f"dsf_mask: {dsf_mask}")
 
-            print(f"Parameters being passed into slide_region: {(int(x * dsf_mask), int(y * dsf_mask)), level, (int(size * dsf), int(size * dsf))}")
+            # print(f"Parameters being passed into slide_region: {(int(x * dsf_mask), int(y * dsf_mask)), level, (int(size * dsf), int(size * dsf))}")
             # Passing in the coordinates of the actual WSI from the coords of the thumbnail, the level, and the size of the patch to read_region
             # Documentation of read_region: https://openslide.org/api/python/
             img = self.slide.read_region(
@@ -276,6 +299,19 @@ class WsiMask:
         self.get_mask()
 
     def sample(self, n, patch_size, mag, threshold, tile_size=None):
+        """
+        TODO: Implementation of get_topk_threshold function
+        Args:
+            n (int): number of patches to sample
+            patch_size (int): size of the patch
+            mag (float): magnification to sample patches at
+            threshold (float): threshold for tissue in a patch
+            tile_size (int): size of the tile
+        Returns:
+            tile_loc (np array): 
+            patch_loc (np array): 
+            (np array): 
+        """
 
         if tile_size is None:
             pos_tile, pos_l, _ = self.sample_all(patch_size, mag, threshold)
@@ -290,8 +326,10 @@ class WsiMask:
         tile_stacked_mask = view_as_windows(
             patch_tissue_mask, (tile_size_corrected, tile_size_corrected),
             step=1)
+        # determining the patch count for each tile
         patch_cnt = tile_stacked_mask.sum(axis=(2, 3))
 
+        # selecting a tile with a sufficient patch count
         tile_locs = np.stack(
             np.where(patch_cnt >= min(n, get_topk_threshold(patch_cnt, 20))))
         tile_loc = tile_locs[:,
@@ -307,6 +345,7 @@ class WsiMask:
         sel = np.random.choice(patch_locs.shape[1],
                                n,
                                replace=n > patch_locs.shape[1])
+        # stores the patch locations
         patch_locs = patch_locs[:, sel]
 
         return tile_loc.swapaxes(1, 0).reshape(-1), patch_locs.swapaxes(
@@ -382,8 +421,12 @@ class WsiMask:
         return np.zeros(2).astype(int), pos
 
     def get_mask(self):
+        """
+        Gets the mask of the WSI specified by svs_path. If the mask exists, load the mask. Otherwise, calculate the mask and save it.
+        """
         # get the mask
         mask_file = self._mask_path(self.svs_path)
+        # if mask exists, load the mask
         if os.path.isfile(mask_file) and self.load_cache:
             self.mask = np.load(mask_file)
         else:
@@ -392,6 +435,9 @@ class WsiMask:
             np.save(mask_file, self.mask)
 
     def _calculate_mask(self):
+        """
+        Calculates the mask of the WSI and saves it in an instance variable.
+        """
         thumbnails = [self.im_low_res.copy()]
         if self.saturation_enhance == 1:
             pass
@@ -403,7 +449,9 @@ class WsiMask:
                 thumbnail = converter.enhance(saturation_enhance)
                 thumbnail = np.array(thumbnail)
                 thumbnails.append(thumbnail)
+        # mask is a binary composite mask that selects regions with colors
         mask = filter_composite(thumbnails)
+        # saving the images of the overlay of the map
         combined_view(
             thumbnails[0], mask,
             self._mask_path(self.svs_path).replace(
@@ -411,6 +459,12 @@ class WsiMask:
         self.mask = mask
 
     def _mask_path(self, svs_path):
+        """
+        Args:
+            svs_path (str): the path to the WSI
+        Returns:
+            str: the path to where the mask file of the WSI is stored
+        """
         save_path = os.path.join(self.cache_dir, 'masks', self.study,
                                  svs_path.replace('.svs', '-mask.npy'))
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -443,11 +497,26 @@ class WsiSampler:
         self.positions = None
 
     def sample(self, size, n=1, mag=10, tile_size=None):
+        """
+        Args:
+            size (int): the size of the patch
+            n (int): the number of patches to sample
+            mag (float): the magnification of the patch to sample
+            tile_size (int): the size of the tile to sample
+        Returns:
+            imgs (list): a list of images (np array) of the patches
+            save_dirs (list): a list of the paths to where the patches are saved
+            pos_tile (list): 
+            pos_l (list): 
+            pos_g (list): 
+
+        """
         pos_tile, pos_l, pos_g = self.ms.sample(n,
                                                 size,
                                                 mag,
                                                 threshold=0.05,
                                                 tile_size=tile_size)
+        print(f"pos_tile: {pos_tile} pos_l: {pos_l} pos_g: {pos_g}")
         imgs = []
         save_dirs = []
         for pos in pos_g:
