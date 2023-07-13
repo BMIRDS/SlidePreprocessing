@@ -308,9 +308,9 @@ class WsiMask:
             threshold (float): threshold for tissue in a patch
             tile_size (int): size of the tile
         Returns:
-            tile_loc (np array): 
-            patch_loc (np array): 
-            (np array): 
+            tile_loc (np array): TBD
+            patch_loc (np array): TBD
+            (np array): TBD
         """
 
         if tile_size is None:
@@ -506,9 +506,9 @@ class WsiSampler:
         Returns:
             imgs (list): a list of images (np array) of the patches
             save_dirs (list): a list of the paths to where the patches are saved
-            pos_tile (list): 
-            pos_l (list): 
-            pos_g (list): 
+            pos_tile (list): TBD
+            pos_l (list): TBD
+            pos_g (list): TBD
 
         """
         pos_tile, pos_l, pos_g = self.ms.sample(n,
@@ -544,7 +544,7 @@ class WsiSampler:
         if self.positions is None:
             self.pos_tile, pos_left = self.ms.sample_all(size,
                                                             mag,
-                                                            threshold=0.05)
+                                                            threshold=0.25)
             self.positions = pos_left.tolist()
         
         # pos contains up to n coordinates w.r.t. WSI thumbnail. These coordinates
