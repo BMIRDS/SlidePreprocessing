@@ -1,0 +1,10 @@
+study:
+  study_name: !!str IBD_PROJECT
+  dataset_type: !!str IBD
+  svs_dir: !!str /pool2/data/WSI_IBD/svs_2019
+  json_path: !!str /pool2/users/amit/SlidePreprocessing/for_vit/meta-files/ibd_project.json
+  num_folds: !!int 5
+
+patch:
+  magnification: !!float 5
+  svs_meta: !!str meta/ibd_project_svs.pickle
