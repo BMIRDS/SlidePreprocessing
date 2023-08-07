@@ -53,7 +53,7 @@ def combined_view(thumbnail, mask, fname):
     plt.close()
 
 
-def fix_thumbnail(img):
+def fix_thumbnail(img, mag, mag_mask, patch_size):
     """
     This function cropts the img and returns it
     Args:
@@ -65,8 +65,8 @@ def fix_thumbnail(img):
     # getting width, height dimensions of image
     size_y, size_x, _ = img.shape
 
-    # calculating the downscale factor based on magnification, mag_mask, and patch_size (TODO: fix hardcoded values)
-    down_scale = 10 / 0.3125 / 224
+    # calculating the downscale factor based on magnification, mag_mask, and patch_size
+    down_scale = mag / mag_mask / patch_size
     max_x, max_y = int(size_x * down_scale), int(size_y * down_scale)
     new_y, new_x = int(max_x / down_scale), int(max_y / down_scale)
 
@@ -226,17 +226,17 @@ class WSI:
             # print(f"level: {level}")
             mag_new = self.mag_ori / (
                 [int(x) for x in self.slide.level_downsamples][level])
-            # print(f"mag_new: {mag_new}")
             dsf = mag_new / mag
-            # print(f"dsf with mag_new: {dsf}")
             dsf_mask = self.mag_ori / mag_mask
-            # print(f"dsf_mask: {dsf_mask}")
+            
+            #block size of patches in mask
+            block_size = int(size / dsf_mask)
 
             # print(f"Parameters being passed into slide_region: {(int(x * dsf_mask), int(y * dsf_mask)), level, (int(size * dsf), int(size * dsf))}")
             # Passing in the coordinates of the actual WSI from the coords of the thumbnail, the level, and the size of the patch to read_region
             # Documentation of read_region: https://openslide.org/api/python/
             img = self.slide.read_region(
-                (int(x * dsf_mask), int(y * dsf_mask)), level,
+                (int(x * dsf_mask * block_size), int(y * dsf_mask * block_size)), level,
                 (int(size * dsf), int(size * dsf)))
             # Converting the image to RGB and resizing it to the desired size
             img = img.convert('RGB').resize((size, size))
@@ -255,9 +255,8 @@ class WSI:
         Returns:
             img (np array): downsampled image
         """
-
         # calculate downsample factor based on original magnification and desired magnification of the patches
-        # to redduce the size of the image
+        # to reduce the size of the image
         dsf = self.mag_ori / mag
 
         # gets best level based on the downsample factor calculated above
@@ -316,27 +315,46 @@ class WsiMask:
                  svs_path='',
                  svs_root='',
                  study='',
-                 mag_mask=0.3125,
+                 mag_mask=None,
                  cache_dir='caches',
                  load_cache=False,
                  saturation_enhance=1,
-                 mag_ori=None):
+                 mag_ori=None,
+                 filtering_style=''):
         self.svs_path = svs_path
-        self.mag_mask = mag_mask
         self.cache_dir = cache_dir
         self.svs_root = svs_root
         self.study = study
         self.saturation_enhance = saturation_enhance
+        self.filtering_style = filtering_style
         self.wsi = WSI(self.svs_path,
                        self.svs_root,
                        load_cache=False,
                        save_cache=False,
                        cache_dir=None,
                        mag_ori=mag_ori)
+        self.mag_mask = self.fix_mag_mask(mag_mask)
         self.im_low_res = self.wsi.downsample(self.mag_mask)
         self.load_cache = load_cache
         self.get_mask()
-
+        
+    def fix_mag_mask(self, mag_mask):
+        """
+        This function makes mask magnification compatible with available downsample levels
+        Args:
+            mag_mask (float): ideal mask magnification
+        Returns:
+            mag_new (float): closest possible mask magnification to input
+        """
+        dsf = self.wsi.mag_ori / mag_mask
+        
+        level = self.wsi.get_best_level_for_downsample(dsf)
+        
+        mag_new = self.wsi.mag_ori / (
+            [int(x) for x in self.wsi.slide.level_downsamples][level])
+        
+        return mag_new
+        
     def sample(self, n, patch_size, mag, threshold, tile_size=None):
         """
         TODO: Implementation of get_topk_threshold function
@@ -400,7 +418,11 @@ class WsiMask:
         Returns:
             patch_tissue_pct (2D numpy array): a "map" where each entry corresponds to a tissue percentage in a patch of the original WSI.
         """
-
+        #Sets standard mag_mask value if one has not been passed in init
+        if self.mag_mask == None:
+            self.mag_mask = self.fix_mag_mask(mag / patch_size)
+            print("[WARNING] No mag_mask value passed to WsiMask initializer, setting to ", self.mag_mask, " based off mag/patch_size")
+            
         # ratio of reqested magnification level of patch extraction to the magnification level of the mask
         scale_factor = mag / self.mag_mask
 
@@ -408,14 +430,11 @@ class WsiMask:
         # block_size * scale_factor = size of patch in the requested magnification level
         block_size = int(patch_size / scale_factor)
         h, w = self.mask.shape
-
         # new_h and new_w represent the dimensions of the resized mask to the scale_factor
         new_h = int(h / (patch_size / scale_factor) * block_size)
         new_w = int(w / (patch_size / scale_factor) * block_size)
-
         # resize the mask to the new dimensions
         mask = resize(self.mask, (new_h, new_w))
-        
         patch_stacked_mask = view_as_windows(mask, (block_size, block_size),
                                              step=block_size)
         # patch_tissue_pct is the percentage of tissue in each patch
@@ -436,6 +455,7 @@ class WsiMask:
         """
 
         # path_tissue_pct represents a 'map' where each entry corresponds to a tissue percentage in a patch of the original WSI
+        
         patch_tissue_pct = self.get_tissue_map(patch_size, mag)
 
         # patch_mask represents a binary 'map' based on the threshold
@@ -446,7 +466,7 @@ class WsiMask:
         patch_mask = remove_small_objects(patch_mask, 10)
 
         # adjsts the thumbnail of the WSI which has been downsampled to mag_mask
-        thumbnail = fix_thumbnail(self.im_low_res.copy())
+        thumbnail = fix_thumbnail(self.im_low_res.copy(), mag, self.mag_mask, patch_size)
         
         # saving images of the overlay the mask on the thumbnail
         combined_view(
@@ -489,7 +509,7 @@ class WsiMask:
                 thumbnail = np.array(thumbnail)
                 thumbnails.append(thumbnail)
         # mask is a binary composite mask that selects regions with colors
-        mask = filter_composite(thumbnails)
+        mask = filter_composite(thumbnails, self.filtering_style)
         # saving the images of the overlay of the map
         combined_view(
             thumbnails[0], mask,
@@ -516,29 +536,32 @@ class WsiMask:
 class WsiSampler:
 
     def __init__(self,
-                 svs_path,
+                 svs_path='',
                  load_cache=False,
                  save_cache=True,
                  cache_dir='patches',
-                 svs_root='/pool2/data/WSI_NHCR',
-                 study='TCGA',
-                 mag_mask=0.3125,
+                 svs_root='',
+                 study='',
+                 mag_mask=None,
                  saturation_enhance=1,
-                 mag_ori=None):
+                 mag_ori=None,
+                 filtering_style=''):
+        self.wsi = WSI(svs_path,
+                          svs_root,
+                          load_cache=load_cache,
+                          save_cache=save_cache,
+                          cache_dir=os.path.join(cache_dir, study),
+                          mag_ori=mag_ori)
         self.ms = WsiMask(svs_path=svs_path,
                           svs_root=svs_root,
                           study=study,
+                          mag_mask=mag_mask,
                           saturation_enhance=saturation_enhance,
-                          mag_ori=mag_ori)
-        self.mag_mask = mag_mask
+                          mag_ori=mag_ori,
+                          filtering_style=filtering_style)
+        self.mag_mask = self.ms.mag_mask
         self.svs_path = svs_path
         self.study = study
-        self.wsi = WSI(svs_path,
-                       svs_root,
-                       load_cache=load_cache,
-                       save_cache=save_cache,
-                       cache_dir=os.path.join(cache_dir, study),
-                       mag_ori=mag_ori)
         self.positions = None
 
     def sample(self, size, n=1, mag=10, tile_size=None):
@@ -561,7 +584,7 @@ class WsiSampler:
                                                 mag,
                                                 threshold=0.05,
                                                 tile_size=tile_size)
-        print(f"pos_tile: {pos_tile} pos_l: {pos_l} pos_g: {pos_g}")
+        # print(f"pos_tile: {pos_tile} pos_l: {pos_l} pos_g: {pos_g}")
         imgs = []
         save_dirs = []
         for pos in pos_g:
@@ -571,7 +594,7 @@ class WsiSampler:
             save_dirs.append(save_dir)
         return imgs, save_dirs, pos_tile, pos_l, pos_g
 
-    def sample_sequential(self, idx, n, size, mag):
+    def sample_sequential(self, idx, n, patch_size, mag):
         """
         This function is the main driver behind storing coordinates of the
         regions/patches that have tissue and calling functions to extract and save
@@ -580,14 +603,14 @@ class WsiSampler:
         Args:
             idx (int): index of the batch
             n (int): number of patches per batch
-            size (int): size of the patch
+            patch_size (int): size of the patch
             mag (int): magnification of the patch
         Returns:
             imgs (list): list of images (np arrays)
             save_dirs (list): list of save directories
         """
         if self.positions is None:
-            self.pos_tile, pos_left = self.ms.sample_all(size,
+            self.pos_tile, pos_left = self.ms.sample_all(patch_size,
                                                             mag,
                                                             threshold=0.25)
             self.positions = pos_left.tolist()
@@ -595,13 +618,18 @@ class WsiSampler:
         # pos contains up to n coordinates w.r.t. WSI thumbnail. These coordinates
         # represent the location of the patches that have tissue present
         pos = self.positions[(idx * n):(idx * n + n)]
+        
+        #Sets standard mag_mask value if one has not been passed in init
+        if self.mag_mask == None:
+            self.mag_mask = self.ms.fix_mag_mask(mag / patch_size)
+            print("[WARNING] No mag_mask value passed to WsiSampler initializer, setting to ", self.mag_mask, " based off mag/patch_size")
 
         imgs = []
         save_dirs = []
         for pos_i in pos:
             # start the process of extracting the patch from the WSI
-            img, save_dir = self.wsi.get_region(pos_i[1], pos_i[0], size, mag,
-                                                mag / size)
+            img, save_dir = self.wsi.get_region(pos_i[1], pos_i[0], patch_size, mag,
+                                                self.mag_mask)
             # add the images to imgs list and the save_dir to save_dirs list
             imgs.append(img)
             save_dirs.append(save_dir)

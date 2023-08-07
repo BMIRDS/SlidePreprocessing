@@ -1,11 +1,11 @@
 study:
   study_name: !!str gram_stains
   dataset_type: !!str GramStains
-  svs_dir: !!str tiles
-  json_path: !!str meta-files/gram_stains_tiles.json
+  svs_dir: !!str /pool2/users/jackm/dpool/data/svs
+  json_path: !!str meta-files/gram_stains_copy.json
   stratify_by: !!str tile_annotation
   num_folds: !!int 5
-  image_extension: !!str .tif
+  image_extension: !!str .svs
 
 tiles:
   svs_dir_for_tiles: /pool2/users/jackm/dpool/data/svs
@@ -21,4 +21,5 @@ patch:
   magnification: !!float 40
   original_magnification: !!float 40
   svs_meta: !!str meta/gram_stains_svs.pickle
-  patch_size: !!int 224
+  patch_size: !!int 112
+  filtering_style: !!str gram_stains

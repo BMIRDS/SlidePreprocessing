@@ -39,7 +39,7 @@ class GramStains(MetaFile):
                 d[i]['Quant (2)'],
                 d[i]['Quantity (Culture)'],
                 d[i]['Specimen type'],
-                d[i]['Tile ID'],
+                d[i]['Image ID'],
                 d[i]['Tile Annotation'],
                 d[i]['Tile Density'],
                 d[i]['Focus'],
@@ -58,7 +58,7 @@ class GramStains(MetaFile):
             'quant_(2)',
             'quantity_(culture)',
             'specimen_type',
-            'tile_id',
+            'image_id',
             'tile_annotation',
             'tile_density',
             'focus',
@@ -66,11 +66,12 @@ class GramStains(MetaFile):
     
         # df['id_patient'] = df.id_patient.apply(
         #         lambda x: x.split('-')[1])
-        df['id_patient'] = df.tile_id
+        df['id_patient'] = df.image_id
         df['study_name'] = self.study_name
         
         # remove slides that have both gram positive and negativ bacteria
         df.drop(df[df['tile_annotation'] == "Both"].index, inplace = True)
+        df.drop(df[df['tile_annotation'] == "None"].index, inplace = True)
         
         print(f"[INFO] Data Frame Shape: {df.shape}")
         print(f"[INFO] Unique Patients: {df.id_patient.unique().shape}")

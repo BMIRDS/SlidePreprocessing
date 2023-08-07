@@ -5,15 +5,13 @@ from skimage.morphology import \
 import cv2
 
 
+SIZE = 1
+
 def is_purple_dot(r, g, b):
     rb_avg = (r + b) / 2
     if r > g - 10 and b > g - 10 and rb_avg > g + 20:
         return True
     return False
-
-
-SIZE = 1
-
 
 def is_purple(crop):
     crop = crop.reshape(SIZE, SIZE, 3)
@@ -34,6 +32,33 @@ def filter_purple(img):
     img_padding[:h, :w, :d] = img
     img_scaled = view_as_windows(img_padding, (SIZE, SIZE, 3), 1)
     return np.apply_along_axis(is_purple, -1,
+                               img_scaled.reshape(h, w, -1)).astype(int)
+
+def is_stained_dot(r, g, b):
+    rb_avg = (r + b) / 2
+    if r > g - 10 and b > g - 10 and rb_avg > g + 20:
+        return True
+    return False
+
+def is_stained(crop):
+    crop = crop.reshape(SIZE, SIZE, 3)
+    for x in range(crop.shape[0]):
+        for y in range(crop.shape[1]):
+            r = crop[x, y, 0]
+            g = crop[x, y, 1]
+            b = crop[x, y, 2]
+            if is_stained_dot(r, g, b):
+                return 1
+    return 0
+
+def filter_stained(img):
+    # TODO: Commit filter changes
+    h, w, d = img.shape
+    step = SIZE
+    img_padding = np.zeros((h + step - 1, w + step - 1, d))
+    img_padding[:h, :w, :d] = img
+    img_scaled = view_as_windows(img_padding, (SIZE, SIZE, 3), 1)
+    return np.apply_along_axis(is_stained, -1,
                                img_scaled.reshape(h, w, -1)).astype(int)
 
 
@@ -131,18 +156,30 @@ def select_mask_instances(mask):
     return final_mask > 0
 
 
-def filter_composite(imgs):
+def filter_composite(imgs, style):
     # select the region with colors
-    mask_s = np.zeros_like(imgs[0][:, :, 0]).astype(int)
-    for i, img in enumerate(imgs):
-        mask_s += filter_purple(img)
+        
+    if style == 'gram_stains':
+        mask_s = np.zeros_like(imgs[0][:, :, 0]).astype(int)
+        for i, img in enumerate(imgs):
+            mask_s += filter_stained(img)
 
-    mask_s = mask_s > 0
-    # mask_s = binary_erosion(binary_dilation(mask_s, np.ones((10,10))), np.ones((10,10)))
-    # filter pen marks
-    mask_no_pen = filter_blue_pen(imgs[0]) & filter_green_pen(imgs[0])
-    mask = mask_s & mask_no_pen
-    mask = remove_small_objects(mask > 0, 400)
-    # mask = select_mask_instances(mask)
+        mask_s = mask_s > 0
+        mask = mask_s 
+        
+    else:
+        if style != 'default':
+            print("[WARNING] Unrecognized filtering style, proceeding with default settings")
+        mask_s = np.zeros_like(imgs[0][:, :, 0]).astype(int)
+        for i, img in enumerate(imgs):
+            mask_s += filter_purple(img)
+
+        mask_s = mask_s > 0
+        # mask_s = binary_erosion(binary_dilation(mask_s, np.ones((10,10))), np.ones((10,10)))
+        # filter pen marks
+        mask_no_pen = filter_blue_pen(imgs[0]) & filter_green_pen(imgs[0])
+        mask = mask_s & mask_no_pen
+        mask = remove_small_objects(mask > 0, 400)
+        # mask = select_mask_instances(mask)
 
     return mask

@@ -37,13 +37,15 @@ def call_get_patches(params):
     return get_patches(*params)
 
 def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int,
-                magnification: float, mag_ori: float):
+                magnification: float, mag_ori: float, filtering_style: str):
     try:
         wsi = WsiSampler(svs_path=svs_fname,
                          svs_root=svs_root,
                          study=study,
+                         mag_mask= (magnification / patch_size),
                          saturation_enhance=0.5,
-                         mag_ori=mag_ori)
+                         mag_ori=mag_ori,
+                         filtering_style=filtering_style)
         _, save_dirs, _, _, _ = wsi.sample_sequential(0, 100000,
                                                       patch_size,
                                                       magnification)
@@ -70,6 +72,7 @@ def main():
         args.user_config_file)
 
     svs_path = config.optional.svs_path
+    svs_path = "/pool2/users/jackm/dpool/data/svs/21s-054mi0480-2.svs"
     study_name = config.study.study_name
   
     if svs_path is not None:
@@ -82,7 +85,8 @@ def main():
              study_name,
              config.patch.patch_size,
              config.patch.magnification,
-             config.patch.original_magnification)]
+             config.patch.original_magnification,
+             config.patch.filtering_style)]
     else:
         df_sub = pd.read_pickle(config.patch.svs_meta)
         paired_inputs = []
@@ -96,7 +100,8 @@ def main():
                  study_name,
                  config.patch.patch_size,
                  config.patch.magnification,
-                 config.patch.original_magnification))
+                 config.patch.original_magnification,
+                 config.patch.filtering_style))
 
     _ = process_map(call_get_patches,
                     paired_inputs, 
