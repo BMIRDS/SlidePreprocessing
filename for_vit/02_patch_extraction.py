@@ -72,7 +72,6 @@ def main():
         args.user_config_file)
 
     svs_path = config.optional.svs_path
-    svs_path = "/pool2/users/jackm/dpool/data/svs/21s-054mi0480-2.svs"
     study_name = config.study.study_name
   
     if svs_path is not None:
