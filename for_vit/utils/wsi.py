@@ -141,7 +141,7 @@ class WSI:
             self.slide = openslide.OpenSlide(os.path.join(svs_root, svs_path))
             self.mag_ori = get_original_magnification(self.slide)
             if (self.mag_ori is None):
-                raise Exception("WARNING: Can't find original magnification info from slide, set value in config")
+                raise Exception("[WARNING] Can't find original magnification info from slide, set value in config")
 
         self.cache_dir = cache_dir
         self.save_cache = save_cache
@@ -220,24 +220,29 @@ class WSI:
             img = np.array(img)
         else:
             # Calculating downsampling factors, level, etc.
+            print("mag: ", mag)
             dsf = self.mag_ori / mag
-            # print(f"dsf with mag_ori: {dsf}")
+            print(f"dsf with mag_ori: {dsf}")
             level = self.get_best_level_for_downsample(dsf)
-            # print(f"level: {level}")
+            print(f"level: {level}")
             mag_new = self.mag_ori / (
                 [int(x) for x in self.slide.level_downsamples][level])
-            dsf = mag_new / mag
+            print("mag new: ", mag_new)
+            dsf_new = mag_new / mag
+            print("dsf: ", dsf)
+            print("dsf_new: ", dsf_new)
             dsf_mask = self.mag_ori / mag_mask
+            dsf_mask = mag / mag_mask
             
-            #block size of patches in mask
-            block_size = int(size / dsf_mask)
-
+            print("size: ", size)
+            print(x,y)
+            print(int(x * size * dsf), int(y * size * dsf))
             # print(f"Parameters being passed into slide_region: {(int(x * dsf_mask), int(y * dsf_mask)), level, (int(size * dsf), int(size * dsf))}")
             # Passing in the coordinates of the actual WSI from the coords of the thumbnail, the level, and the size of the patch to read_region
             # Documentation of read_region: https://openslide.org/api/python/
             img = self.slide.read_region(
-                (int(x * dsf_mask * block_size), int(y * dsf_mask * block_size)), level,
-                (int(size * dsf), int(size * dsf)))
+                (int(x * size * dsf), int(y * size * dsf)), level,
+                (int(size * dsf_new), int(size * dsf_new)))
             # Converting the image to RGB and resizing it to the desired size
             img = img.convert('RGB').resize((size, size))
             if self.save_cache:
@@ -277,7 +282,7 @@ class WSI:
 
         # sizes is a tuple of the new dimensions of the downsampled image
         sizes = tuple(int(x // dsf) for x in self.slide.dimensions)
-
+        
         # returns the downsampled image as a numpy array in RGB format
         return np.array(img.convert('RGB').resize(sizes))
 
@@ -333,7 +338,7 @@ class WsiMask:
                        save_cache=False,
                        cache_dir=None,
                        mag_ori=mag_ori)
-        self.mag_mask = self.fix_mag_mask(mag_mask)
+        self.mag_mask = mag_mask
         self.im_low_res = self.wsi.downsample(self.mag_mask)
         self.load_cache = load_cache
         self.get_mask()
@@ -418,24 +423,25 @@ class WsiMask:
         Returns:
             patch_tissue_pct (2D numpy array): a "map" where each entry corresponds to a tissue percentage in a patch of the original WSI.
         """
-        #Sets standard mag_mask value if one has not been passed in init
-        if self.mag_mask == None:
-            self.mag_mask = self.fix_mag_mask(mag / patch_size)
-            print("[WARNING] No mag_mask value passed to WsiMask initializer, setting to ", self.mag_mask, " based off mag/patch_size")
+        # #Sets standard mag_mask value if one has not been passed in init
+        # if self.mag_mask == None:
+        #     self.mag_mask = self.fix_mag_mask(mag / patch_size)
+        #     print("[WARNING] No mag_mask value passed to WsiMask initializer, setting to ", self.mag_mask, " based off mag/patch_size")
             
-        # ratio of reqested magnification level of patch extraction to the magnification level of the mask
+        # scale factor is the downscaling ratio to the mask
         scale_factor = mag / self.mag_mask
 
-        # block_size represents the size of the patches in the binary tissue mask
-        # block_size * scale_factor = size of patch in the requested magnification level
+        # block_size represents the size of the patches(factoring in overall downsampling) in the binary tissue mask
         block_size = int(patch_size / scale_factor)
+        
+        print("sf, mm, blocksize: ", scale_factor, self.mag_mask, block_size)
         h, w = self.mask.shape
         # new_h and new_w represent the dimensions of the resized mask to the scale_factor
         new_h = int(h / (patch_size / scale_factor) * block_size)
         new_w = int(w / (patch_size / scale_factor) * block_size)
         # resize the mask to the new dimensions
         mask = resize(self.mask, (new_h, new_w))
-        patch_stacked_mask = view_as_windows(mask, (block_size, block_size),
+        patch_stacked_mask = view_as_windows(self.mask, (block_size, block_size),
                                              step=block_size)
         # patch_tissue_pct is the percentage of tissue in each patch
         patch_tissue_pct = patch_stacked_mask.mean(axis=(2, 3))
@@ -620,9 +626,9 @@ class WsiSampler:
         pos = self.positions[(idx * n):(idx * n + n)]
         
         #Sets standard mag_mask value if one has not been passed in init
-        if self.mag_mask == None:
-            self.mag_mask = self.ms.fix_mag_mask(mag / patch_size)
-            print("[WARNING] No mag_mask value passed to WsiSampler initializer, setting to ", self.mag_mask, " based off mag/patch_size")
+        # if self.mag_mask == None:
+        #     self.mag_mask = self.ms.fix_mag_mask(mag / patch_size)
+        #     print("[WARNING] No mag_mask value passed to WsiSampler initializer, setting to ", self.mag_mask, " based off mag/patch_size")
 
         imgs = []
         save_dirs = []

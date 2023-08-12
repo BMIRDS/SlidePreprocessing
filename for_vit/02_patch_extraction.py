@@ -42,7 +42,7 @@ def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int,
         wsi = WsiSampler(svs_path=svs_fname,
                          svs_root=svs_root,
                          study=study,
-                         mag_mask= (magnification / patch_size),
+                         mag_mask= 2.5,
                          saturation_enhance=0.5,
                          mag_ori=mag_ori,
                          filtering_style=filtering_style)
