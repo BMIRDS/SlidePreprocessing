@@ -94,11 +94,6 @@ class WsiSampler:
         # represent the location of the patches that have tissue present
         pos = self.positions[(idx * n):(idx * n + n)]
         
-        #Sets standard mag_mask value if one has not been passed in init
-        # if self.mag_mask == None:
-        #     self.mag_mask = self.ms.fix_mag_mask(mag / patch_size)
-        #     print("[WARNING] No mag_mask value passed to WsiSampler initializer, setting to ", self.mag_mask, " based off mag/patch_size")
-
         imgs = []
         save_dirs = []
         for pos_i in pos:

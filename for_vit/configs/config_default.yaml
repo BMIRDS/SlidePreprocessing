@@ -110,13 +110,18 @@ patch:
   # Backbone model for feature extraction
   backbone: resnet_18
 
-  # (2, 4)
+  # (4)
   # Batch size for processing slide patches
   batch_size: !!int 256
 
   # (2)
   # Filtering style. Either "default" or gram_stains"
   filtering_style: !!str default
+
+  # (2)
+  # Mask magnification for color filtering during patch extraction.
+  # A lower magnification will run faster but will be less precise
+  mag_mask: !!float 0.3125
 
 feature:
   # Feature Extraction Configuration

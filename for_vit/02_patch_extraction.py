@@ -37,12 +37,12 @@ def call_get_patches(params):
     return get_patches(*params)
 
 def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int,
-                magnification: float, mag_ori: float, filtering_style: str):
+                magnification: float, mag_ori: float, filtering_style: str, mag_mask: float):
     try:
         wsi = WsiSampler(svs_path=svs_fname,
                          svs_root=svs_root,
                          study=study,
-                         mag_mask= 2.5,
+                         mag_mask=mag_mask,
                          saturation_enhance=0.5,
                          mag_ori=mag_ori,
                          filtering_style=filtering_style)
@@ -85,7 +85,8 @@ def main():
              config.patch.patch_size,
              config.patch.magnification,
              config.patch.original_magnification,
-             config.patch.filtering_style)]
+             config.patch.filtering_style,
+             config.patch.mag_mask)]
     else:
         df_sub = pd.read_pickle(config.patch.svs_meta)
         paired_inputs = []
@@ -100,7 +101,8 @@ def main():
                  config.patch.patch_size,
                  config.patch.magnification,
                  config.patch.original_magnification,
-                 config.patch.filtering_style))
+                 config.patch.filtering_style,
+                 config.patch.mag_mask))
 
     _ = process_map(call_get_patches,
                     paired_inputs, 

@@ -116,5 +116,3 @@ class TCGA(MetaFile):
         self.df = self.df.loc[self.df.id_patient.isin(df_svs.id_patient)].reset_index(drop=True)
         
         return df_svs
-
-

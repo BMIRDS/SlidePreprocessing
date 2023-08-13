@@ -109,23 +109,6 @@ class WsiMask:
         self.load_cache = load_cache
         self.get_mask()
         
-    def fix_mag_mask(self, mag_mask):
-        """
-        This function makes mask magnification compatible with available downsample levels
-        Args:
-            mag_mask (float): ideal mask magnification
-        Returns:
-            mag_new (float): closest possible mask magnification to input
-        """
-        dsf = self.wsi.mag_ori / mag_mask
-        
-        level = self.wsi.get_best_level_for_downsample(dsf)
-        
-        mag_new = self.wsi.mag_ori / (
-            [int(x) for x in self.wsi.slide.level_downsamples][level])
-        
-        return mag_new
-        
     def sample(self, n, patch_size, mag, threshold, tile_size=None):
         """
         TODO: Implementation of get_topk_threshold function
@@ -194,6 +177,8 @@ class WsiMask:
 
         # block_size represents the size of the patches(factoring in overall downsampling) in the binary tissue mask
         block_size = int(patch_size / scale_factor)
+        
+        assert (block_size >= 1), "Mask Mag too low to extract a tissue map for requested patch size. Increase mag_mask or patch_size in config"
         
         h, w = self.mask.shape
         # new_h and new_w represent the dimensions of the resized mask to the scale_factor
