@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 
 import numpy as np
 import PIL
@@ -253,10 +252,9 @@ class WsiMask:
         # get the mask
         mask_file = self._mask_path(self.svs_path)
         # if mask exists, load the mask
-        if os.path.isfile(mask_file) and self.load_cache:
+        if Path(mask_file).exists() and self.load_cache:
             self.mask = np.load(mask_file)
         else:
-            # print("calculating mask", os.path.basename(self.svs_path))
             self._calculate_mask()
             np.save(mask_file, self.mask)
 
@@ -293,10 +291,10 @@ class WsiMask:
         """
         mask_path = f"{Path(svs_path).stem}{'-mask.npy'}"
         
-        save_path = os.path.join(self.cache_dir, 'masks', self.study,
-                                 mask_path)
+        save_path = Path(self.cache_dir) / "masks" / self.study / mask_path
         
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        return save_path
+        Path.mkdir(save_path.parent, parents=True, exist_ok=True)
+        
+        return str(save_path)
   
   

@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import numpy as np
 import PIL
@@ -25,7 +25,7 @@ class WsiSampler:
                           svs_root,
                           load_cache=load_cache,
                           save_cache=save_cache,
-                          cache_dir=os.path.join(cache_dir, study),
+                          cache_dir= str(Path(cache_dir) / study),
                           mag_ori=mag_ori)
         self.ms = WsiMask(svs_path=svs_path,
                           svs_root=svs_root,

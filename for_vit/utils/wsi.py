@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import numpy as np
@@ -67,11 +66,11 @@ class WSI:
         if load_cache:
             pass
         elif mag_ori:
-            self.slide = openslide.OpenSlide(os.path.join(svs_root, svs_path))
+            self.slide = openslide.OpenSlide(str(Path(svs_root) / svs_path))
             self.mag_ori = mag_ori
         else:
             # self.slide is an OpenSlide object representing the slide belonging to the svs_path
-            self.slide = openslide.OpenSlide(os.path.join(svs_root, svs_path))
+            self.slide = openslide.OpenSlide(str(Path(svs_root) / svs_path))
             self.mag_ori = get_original_magnification(self.slide)
             if (self.mag_ori is None):
                 raise Exception("[WARNING] Can't find original magnification info from slide, set value in config")
@@ -135,17 +134,14 @@ class WSI:
 
         # constructing the save directory where the patches will be saved
         # the jpeg files are saved with names based on their x and y coordinates in the thumbnail
-        save_dir = os.path.join(self.cache_dir,
-                                f"mag_{str(mag)}-size_{str(size)}", svs_id,
-                                f"{x:05d}", f"{y:05d}.jpeg")
         
-        # print(f"save_dir: {save_dir}")
+        save_path = Path(self.cache_dir) / f"mag_{str(mag)}-size_{str(size)}" / svs_id / f"{x:05d}" / f"{y:05d}.jpeg"
 
-        if os.path.isfile(save_dir):
-            return None, save_dir
+        if save_path.exists():
+            return None, str(save_path)
 
         if self.load_cache:
-            img = Image.open(save_dir)
+            img = Image.open(str(save_path))
             img = np.array(img)
         else:
             # Calculating downsampling factor for original image coordinates
@@ -167,11 +163,12 @@ class WSI:
             # Converting the image to RGB and resizing it to the desired size
             img = img.convert('RGB').resize((size, size))
             if self.save_cache:
-                os.makedirs(os.path.dirname(save_dir), exist_ok=True)
+                Path.mkdir(save_path.parent, parents=True, exist_ok=True)
+                
                 # saving the image at the save_dir location
-                img.save(save_dir)
+                img.save(str(save_path))
     
-        return np.array(img), save_dir
+        return np.array(img), str(save_path)
 
     def downsample(self, mag):
         """
