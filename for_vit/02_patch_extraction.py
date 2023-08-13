@@ -30,7 +30,7 @@ import pandas as pd
 
 from utils.config import Config, default_options
 from utils.print_utils import print_intro, print_outro
-from utils.wsi import WsiSampler
+from utils.wsi_sampler import WsiSampler
 from utils.io_utils import create_slide_meta_dir
 
 def call_get_patches(params):
