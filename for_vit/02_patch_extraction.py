@@ -30,18 +30,22 @@ import pandas as pd
 
 from utils.config import Config, default_options
 from utils.print_utils import print_intro, print_outro
-from utils.wsi import WsiSampler
+from utils.wsi_sampler import WsiSampler
 from utils.io_utils import create_slide_meta_dir
 
 def call_get_patches(params):
     return get_patches(*params)
 
-def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int, magnification: float):
+def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int,
+                magnification: float, mag_ori: float, filtering_style: str, mag_mask: float):
     try:
         wsi = WsiSampler(svs_path=svs_fname,
                          svs_root=svs_root,
                          study=study,
-                         saturation_enhance=0.5)
+                         mag_mask=mag_mask,
+                         saturation_enhance=0.5,
+                         mag_ori=mag_ori,
+                         filtering_style=filtering_style)
         _, save_dirs, _, _, _ = wsi.sample_sequential(0, 100000,
                                                       patch_size,
                                                       magnification)
@@ -69,6 +73,7 @@ def main():
 
     svs_path = config.optional.svs_path
     study_name = config.study.study_name
+  
     if svs_path is not None:
         svs_path = Path(svs_path)
         svs_fname = svs_path.name
@@ -78,12 +83,15 @@ def main():
              svs_folder, 
              study_name,
              config.patch.patch_size,
-             config.patch.magnification)]
+             config.patch.magnification,
+             config.patch.original_magnification,
+             config.patch.filtering_style,
+             config.patch.mag_mask)]
     else:
         df_sub = pd.read_pickle(config.patch.svs_meta)
         paired_inputs = []
         for i, row in df_sub.iterrows():
-            svs_fname = f"{row['id_svs']}.svs"
+            svs_fname = f"{row['id_svs']}{config.study.image_extension}"
             full_path = Path(row['svs_path'])
             svs_folder = str(full_path.parent)
             paired_inputs.append(
@@ -91,7 +99,10 @@ def main():
                  svs_folder,
                  study_name,
                  config.patch.patch_size,
-                 config.patch.magnification))
+                 config.patch.magnification,
+                 config.patch.original_magnification,
+                 config.patch.filtering_style,
+                 config.patch.mag_mask))
 
     _ = process_map(call_get_patches,
                     paired_inputs, 

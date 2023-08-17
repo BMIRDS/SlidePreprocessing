@@ -29,6 +29,7 @@ study:
   # (0,1)
   # Path to the folder containing svs data
   # Example: /pool2/data/WSI_TCGA/Colorectal
+  # Set to "tiles" if using tile preprocessing
   svs_dir: !!str <SET_YOUR_OWN_VALUE>
 
   # (1)
@@ -43,16 +44,25 @@ study:
   # Number of folds for kfold cross validation
   num_folds: !!int 5
 
+  # (2)
+  # Tells get_patches to look for tif files instead of svs
+  image_extension: !!str .svs
+
 tiles:
   ## Tile configuration. Only needed if using 00_get_tiles.py. This preprocessing script is optional and used
   # if your dataset requires splitting slides into smaller tiles as in gram_stains.
+
+  # (0)
+  # Path to svs folder that is input to make tiles
+  svs_dir_for_tiles: !!str <SET_YOUR_OWN_VALUE>
+
   # (0)
   # Path to the folder to write tile tif data
-  tile_dir: !!str <SET_YOUR_OWN_VALUE>
+  tile_dir: !!str tiles
 
   # (0)
   # Path to the folder to write tile jpg data for annotation
-  annotation_dir: !!str <SET_YOUR_OWN_VALUE>
+  annotation_dir: !!str annotations
 
   # (0)
   # Path input cvs for tile production
@@ -78,6 +88,11 @@ patch:
   # Magnification level to use for extracting patches
   magnification: !!float 10
 
+  # (2)
+  # Original Magnification level for your dataset.
+  # Optional, Set manually if not included in slide metadata
+  original_magnification: null
+
   # (2, 3, 4, 5)
   # Size of the extracted patches
   patch_size: !!int 224
@@ -98,6 +113,15 @@ patch:
   # (4)
   # Batch size for processing slide patches
   batch_size: !!int 256
+
+  # (2)
+  # Filtering style. Either "default" or gram_stains"
+  filtering_style: !!str default
+
+  # (2)
+  # Mask magnification for color filtering during patch extraction.
+  # A lower magnification will run faster but will be less precise
+  mag_mask: !!float 0.3125
 
 feature:
   # Feature Extraction Configuration

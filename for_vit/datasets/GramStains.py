@@ -40,6 +40,9 @@ class GramStains(MetaFile):
                 d[i]['Quantity (Culture)'],
                 d[i]['Specimen type'],
                 d[i]['Image ID'],
+                d[i]['Tile Annotation'],
+                d[i]['Tile Density'],
+                d[i]['Focus'],
             ])
 
         df = pd.DataFrame(results)
@@ -55,32 +58,45 @@ class GramStains(MetaFile):
             'quant_(2)',
             'quantity_(culture)',
             'specimen_type',
-            'id_patient',
+            'image_id',
+            'tile_annotation',
+            'tile_density',
+            'focus',
         ]
     
-        df['id_patient'] = df.id_patient.apply(
-                lambda x: x.split('-')[1])
+        # df['id_patient'] = df.id_patient.apply(
+        #         lambda x: x.split('-')[1])
+        df['id_patient'] = df.image_id
         df['study_name'] = self.study_name
         
-        print(df.shape)
-        print(df.id_patient.unique().shape)
-        print(df.describe())
+        # remove slides that have both gram positive and negativ bacteria
+        df.drop(df[df['tile_annotation'] == "Both"].index, inplace = True)
+        df.drop(df[df['tile_annotation'] == "None"].index, inplace = True)
+        
+        print(f"[INFO] Data Frame Shape: {df.shape}")
+        print(f"[INFO] Unique Patients: {df.id_patient.unique().shape}")
+        print("[INFO] ", df.describe())
 
         return df
       
     #produces self.df_svs by reading info from svs file names from input svs folder
     def parse_svs(self):
         
-        files = [str(p) for p in Path(self.svs_path).rglob('*.svs')]
-        print(f"{len(files)} files found!")
+        files = [str(p) for p in Path(self.svs_path).rglob('*')]
+        print(f"[INFO] {len(files)} files found!")
 
         df_svs = pd.DataFrame(files, columns=['svs_path'])
-        df_svs['id_patient'] = df_svs.svs_path.apply(
-            lambda x: x.split('-')[1])
 
-        df_svs['id_svs'] = df_svs.svs_path.apply(
-            lambda x: x.split('-')[2].replace('.svs', ''))
+        df_svs['id_patient'] = df_svs.svs_path.apply(
+            lambda x: Path(x).stem)
+        
+        df_svs = df_svs.loc[df_svs.id_patient.isin(
+            self.df.id_patient)].reset_index(drop=True)
+
+        df_svs['id_svs'] = df_svs.id_patient
         df_svs['study_name'] = self.study_name
+        
+        self.df = self.df.loc[self.df.id_patient.isin(df_svs.id_patient)].reset_index(drop=True)
         
         return df_svs
     

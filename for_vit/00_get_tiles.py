@@ -37,10 +37,16 @@ import pandas as pd
 from utils.config import Config, default_options
 from utils.print_utils import print_intro, print_outro
 
-def output_jpeg_tiles(image_name, anno_subdir, 
-                      tile_path, compression_factor, window_size):  
-  
+def output_jpeg_tiles(image_name: str, anno_subdir: str, 
+                      tile_path: str, compression_factor: float, window_size: int): 
+  """
+  Helper function to use OpenSlide to process input slide into jpg and tif tiles.
+  Saves jpg files to anno_subdir and tif files to tile_path
+  Dimensions of tiles determined by compression factor and window_size.
+  See docstring above for more arg details.
+  """
   img = openslide.OpenSlide(image_name)
+  
   width, height = img.level_dimensions[0]
     
   increment_x = int(ceil(width / window_size))
@@ -48,11 +54,13 @@ def output_jpeg_tiles(image_name, anno_subdir,
 
   print(f"[INFO] Converting {image_name} with width {width} and height {height}")
     
-  index = 1
+  index = 0
 
   for incre_x in range(increment_x):
     for incre_y in range(increment_y):
-
+      
+      index += 1
+      
       begin_x = window_size * incre_x
       end_x = min(width, begin_x + window_size)
       begin_y = window_size * incre_y
@@ -85,10 +93,8 @@ def output_jpeg_tiles(image_name, anno_subdir,
       vipsimage.tiffsave(str(output_tif_path), compression="jpeg", 
                          tile=True, tile_width=512, tile_height=512, 
                          pyramid=True, bigtiff=True)
-      
-      index += 1
     
-  return index      
+  return index     
 
 def main():
   args = default_options()
@@ -96,7 +102,7 @@ def main():
       args.default_config_file,
       args.user_config_file)
     
-  src = Path(config.study.svs_dir)
+  src = Path(config.tiles.svs_dir_for_tiles)
   tile = Path(config.tiles.tile_dir)
   anno = Path(config.tiles.annotation_dir)
   tile.mkdir(exist_ok=True)
@@ -107,7 +113,6 @@ def main():
   in_csv = pd.read_csv(config.tiles.csv_in_path)
   in_csv.set_index("Image ID", inplace=True)
   # "Tile Annotation" column set blank, requires manual labels after tile processing
-  in_csv.insert(0, 'Tile Annotation', '')
   in_csv.insert(0, 'Tile ID', '')
   tile_csv = pd.DataFrame()
 
@@ -116,10 +121,10 @@ def main():
     annotation_subdir_path = Path(config.tiles.annotation_dir) / name
     annotation_subdir_path.mkdir(exist_ok=True, parents=True)
     tile_path = Path(config.tiles.tile_dir) / name
-
+    
     count = output_jpeg_tiles(f, str(annotation_subdir_path), str(tile_path), 
-                              config.tiles.tile_compression_factor, 
-                              config.tiles.tile_window_size)
+                               config.tiles.tile_compression_factor, 
+                               config.tiles.tile_window_size)
     
     # update csv with new rows for each tile
     image_id = name
