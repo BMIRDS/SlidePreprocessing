@@ -7,13 +7,13 @@ import cv2
 
 SIZE = 1
 
-def is_purple_dot(r, g, b):
+def is_purple_dot(r: float, g: float, b: float):
     rb_avg = (r + b) / 2
     if r > g - 10 and b > g - 10 and rb_avg > g + 20:
         return True
     return False
 
-def is_purple(crop):
+def is_purple(crop: np.ndarray):
     crop = crop.reshape(SIZE, SIZE, 3)
     for x in range(crop.shape[0]):
         for y in range(crop.shape[1]):
@@ -25,7 +25,7 @@ def is_purple(crop):
     return 0
 
 
-def filter_purple(img):
+def filter_purple(img: np.ndarray):
     h, w, d = img.shape
     step = SIZE
     img_padding = np.zeros((h + step - 1, w + step - 1, d))
@@ -34,13 +34,12 @@ def filter_purple(img):
     return np.apply_along_axis(is_purple, -1,
                                img_scaled.reshape(h, w, -1)).astype(int)
 
-def is_stained_dot(r, g, b):
-    rb_avg = (r + b) / 2
-    if r > g - 10 and b > g - 10 and rb_avg > g + 20:
+def is_stained_dot(r: float, g: float, b: float):
+    if (r > 90 and g < 220 and b < 220 and b > g - 10 and r > g - 10) or (r < 50 and g < 50 and b > 120):
         return True
     return False
 
-def is_stained(crop):
+def is_stained(crop: np.ndarray):
     crop = crop.reshape(SIZE, SIZE, 3)
     for x in range(crop.shape[0]):
         for y in range(crop.shape[1]):
@@ -51,15 +50,16 @@ def is_stained(crop):
                 return 1
     return 0
 
-def filter_stained(img):
-    # TODO: Commit filter changes
+def filter_stained(img: np.ndarray):
+    # TODO: Replace with class based filter optoions
     h, w, d = img.shape
     step = SIZE
     img_padding = np.zeros((h + step - 1, w + step - 1, d))
     img_padding[:h, :w, :d] = img
     img_scaled = view_as_windows(img_padding, (SIZE, SIZE, 3), 1)
-    return np.apply_along_axis(is_stained, -1,
+    mask = np.apply_along_axis(is_stained, -1,
                                img_scaled.reshape(h, w, -1)).astype(int)
+    return mask
 
 
 def filter_grays(rgb, tolerance=15, output_type="bool"):
@@ -156,7 +156,7 @@ def select_mask_instances(mask):
     return final_mask > 0
 
 
-def filter_composite(imgs, style):
+def filter_composite(imgs: np.ndarray, style: str='default'):
     # select the region with colors
         
     if style == 'gram_stains':
