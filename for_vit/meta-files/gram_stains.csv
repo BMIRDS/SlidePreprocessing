@@ -1,0 +1,56 @@
+﻿Image ID,Specimen type,Morphology,Gram stain description #1,Quant (1),Gram stain description #2,Quant (2),Inflammatory cells,Inflam (Quant),Organism (Culture),Quantity (Culture),Comments (Culture)
+21s-007mi0082-1,Blood,GPC,Gram positive cocci,,,,,,Streptococcus salivarius group,,
+21s-007mi0082-2,Blood,GPC,Gram positive cocci,,,,,,Streptococcus salivarius group,,
+21s-054mi0062-1,Blood,GNR,Gram negative rods,,,,,,Lactose fermenting gram negative rods,,
+21s-054mi0480-1,Blood,GNR,Gram negative rods,,,,,,Non-lactose fermenting gram negative rods,,
+21s-054mi0480-2,Blood,GNR,Gram negative rods,,,,,,Non-lactose fermenting gram negative rods,,
+21s-054mi0480-3,Blood,GNR,Gram negative rods,,,,,,Non-lactose fermenting gram negative rods,,
+21s-054mi0520-1,Sputum,"GPC, GPR",Gram positive cocci in pairs and chains,rare,Gram positive rods,rare,PMNs,heavy,2+ oropharyngeal flora,,
+21s-055mi0242-1,Blood,GNR,Gram negative rods,,,,,,Escherichia coli,,
+21s-055mi0242-2,Blood,GNR,Gram negative rods,,,,,,Escherichia coli,,
+21s-055mi0242-3,Blood,GNR,Gram negative rods,,,,,,Escherichia coli,,
+21s-055mi0415-1,Tissue,GPC,Gram positive cocci in pairs,rare,,,,,Enterococcus faecalis,4+,2+ Escherichia coli
+21s-056mi0180-1,Blood,GNR,Gram negative rods,,,,,,Escherichia coli,,
+21s-056mi0180-2,Blood,GNR,Gram negative rods,,,,,,Escherichia coli,,
+21s-056mi0488-1,Blood,GPC,Gram positive cocci,,,,,,Enterococcus faecalis,,
+21s-110mi0480-1,Body fluid (joint),No organisms seen,No organisms seen,,,,PMNs,small to mod,Brucella species,,
+21s-117mi0121-1,Blood,GNR,Gram negative rods,,,,,,Non-lactose fermenting gram negative rods,,
+21s-117mi0121-2,Blood,GNR,Gram negative rods,,,,,,Non-lactose fermenting gram negative rods,,
+21s-117mi0121-3,Blood,GNR,Gram negative rods,,,,,,Non-lactose fermenting gram negative rods,,
+21s-117mi0261-1,Blood,GPC,Gram positive cocci,,,,,,Staphylococcus aureus,,
+21s-117mi0261-2,Blood,GPC,Gram positive cocci,,,,,,Staphylococcus aureus,,
+21s-117mi0261-3,Blood,GPC,Gram positive cocci,,,,,,Staphylococcus aureus,,
+21s-120mi0015-1,Blood,"GPC, GPR",Gram positive cocci in groups,,"Gram positive rods, pleomorphic",,,,Coag negative Staphylococcus,,Gram positive rods
+21s-120mi0015-2,Blood,"GPC, GPR",Gram positive cocci in groups,,"Gram positive rods, pleomorphic",,,,Coag negative Staphylococcus,,Gram positive rods
+21s-120mi0015-3,Blood,"GPC, GPR",Gram positive cocci in groups,,"Gram positive rods, pleomorphic",,,,Coag negative Staphylococcus,,Gram positive rods
+21s-120mi0185-1,Blood,GNR,Gram negative rods,,,,,,Escherichia coli,,
+21s-120mi0185-2,Blood,GNR,Gram negative rods,,,,,,Escherichia coli,,
+21s-120mi0185-3,Blood,GNR,Gram negative rods,,,,,,Escherichia coli,,
+21s-121mi0006-1,Blood,GPC,Gram positive cocci in groups,,,,,,Staphylococcus aureus,,
+21s-121mi0006-2,Blood,GPC,Gram positive cocci in groups,,,,,,Staphylococcus aureus,,
+21s-121mi0110-1,Blood,GPC,Gram positive cocci in groups,,,,,,Coag negative Staphylococcus,,
+21s-121mi0110-2,Blood,GPC,Gram positive cocci in groups,,,,,,Coag negative Staphylococcus,,
+21s-121mi0112-1,Blood,GPC,Gram positive cocci in groups,,,,,,"Staphylococcus aureus, MRSA",,
+21s-121mi0112-2,Blood,GPC,Gram positive cocci in groups,,,,,,"Staphylococcus aureus, MRSA",,
+21s-122mi0151-1,Blood,GPC,Gram positive cocci in groups,,,,,,Staphylococcus aureus,,
+21s-122mi0151-2,Blood,GPC,Gram positive cocci in groups,,,,,,Staphylococcus aureus,,
+21s-146mi0092-1,Body fluid (CSF),GPC,Gram positive cocci,rare,,,PMNs,mod to heavy,No growth,,
+21s-151mi0162-1,Body fluid,GPR,Beaded gram positive rods,small to mod,,,PMNs,rare,Nocardia nova,10-50 colonies,
+21s-153mi0091-1,Body fluid (pleural),No organisms seen,No organisms seen,,,,PMNs,heavy,Nocardia nova,10-50 colonies,
+21s-155mi0101-1,Wound,GPC,Gram positive cocci,heavy,,,PMNs,small to mod,No growth,,
+21s-186mi0008-1,Body fluid (bile),"GNR, GPR, GPC",Gram negative rods,heavy,"Gram positive rods, Gram positive cocci","moderate, small",PMNs,rare,Enterococcus faecium,2+,2+ enteric flora
+21s-186mi0008-2,Body fluid (bile),"GNR, GPR, GPC",Gram negative rods,heavy,"Gram positive rods, Gram positive cocci","moderate, small",PMNs,rare,Enterococcus faecium,2+,2+ enteric flora
+21s-186mi0203-1,BAL,"GNR, GPR",Gram negative rods,rare,Gram positive rods,rare,PMNs,small,Stenotrophomonas maltophilia,2+,
+21s-186mi0250-1,Tissue,GPC,Gram positive cocci in pairs,rare,,,No PMN,,"Staphylococcus aureus, MRSA",1+,
+21s-187mi0134-1,Wound,GPC,Gram positive cocci in pairs,rare,,,No PMN,,3+ Mixed skin flora,,
+21s-187mi0189-1,Tissue,GPC,Gram positive cocci in pairs,small,,,PMNs,rare,Enterococcus faecalis,1+,"2+ E. coli, A. xylosoxidans"
+21s-187mi0235-1,Tissue,"GPC, GPR",Gram positive cocci in pairs and chains,rare to small,Gram positive rods,rare,PMNs,rare,Streptococcus pyogenes,rare,
+21s-187mi0237-1,Wound,GPC,Gram positive cocci in pairs and groups,small,,,PMNs,small,"Staphylococcus aureus, MRSA",3+,
+21s-187mi0237-2,Wound,GPC,Gram positive cocci in pairs and groups,small,,,PMNs,small,"Staphylococcus aureus, MRSA",3+,
+21s-187mi0287-1,Tissue,"GPC, GPR",Gram positive cocci in pairs,heavy,Gram positive rods,small,No PMN,,Streptococcus anginosus group,4+,3+ Corynebacterium striatum
+21s-187mi0300-1,Body fluid (breast),GPC,Gram positive cocci in pairs,rare to small,,,PMNs,mod to heavy,Anaerobic gram positive cocci,LMO,rare Propionibacterium
+21s-187mi0300-2,Body fluid (breast),GPC,Gram positive cocci in pairs,rare to small,,,PMNs,mod to heavy,Anaerobic gram positive cocci,LMO,rare Propionibacterium
+21s-187mi0372-1,Tissue,GPC,Gram positive cocci,rare,,,No PMN,,Coag negative Staphylococcus,2+,
+21s-187mi0428-1,Tissue,GPC,"Gram positive cocci in pairs, chains, and groups",heavy,,,PMNs,rare,"Staphylococcus aureus, MRSA",4+,
+21s-187mi0428-2,Tissue,GPC,"Gram positive cocci in pairs, chains, and groups",heavy,,,PMNs,rare,"Staphylococcus aureus, MRSA",4+,
+21s-188mi0103-1,BAL,"GNR, GPC",Gram negative rods,rare,Gram positive cocci in pairs,rare,PMNs,small to mod,Klebsiella pneumoniae,3+,2+ normal oral flora

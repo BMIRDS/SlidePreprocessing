@@ -1,0 +1,144 @@
+# NOTE: To override any values in this file, please create config_user.yaml 
+# (or any YAML file name of you like).
+# In config_user.yaml, only define the variables you wish to update. 
+# Unmentioned variables will use the default values specified here.
+# Please avoid directly modifying values in this file.
+#
+# Documentation Tags:
+#  (<number>,): variable is used in the <number>-ed scripts
+#  (default): variables can be left with their default values
+#  (custom): more likely to need modification for each user
+#---------------------------------------------------
+
+
+study:
+  ## Study Configuration
+
+  # (1, 2, 3, 4, 5)
+  # Name of the study to be used
+  # Example: TCGA_COAD
+  study_name: !!str <SET_YOUR_OWN_VALUE>
+
+  # (1)
+  # Indicates a class for json processing pipeline
+  # See datasets/ directory for available classes.
+  # Available: TCGA, GramStains
+  # Please implement a dataset file if necessary
+  dataset_type: !!str <SET_YOUR_OWN_VALUE>
+
+  # (0,1)
+  # Path to the folder containing svs data
+  # Example: /pool2/data/WSI_TCGA/Colorectal
+  # Set to "tiles" if using tile preprocessing
+  svs_dir: !!str <SET_YOUR_OWN_VALUE>
+
+  # (1)
+  # Path to the json file with dataset info.
+  json_path: !!str <SET_YOUR_OWN_VALUE>
+
+  # (1)
+  # Dataset field to use with stratification.
+  stratify_by: !!str status
+
+  # (1)
+  # Number of folds for kfold cross validation
+  num_folds: !!int 5
+
+  # (2)
+  # Tells get_patches to look for tif files instead of svs
+  image_extension: !!str .svs
+
+tiles:
+  ## Tile configuration. Only needed if using 00_get_tiles.py. This preprocessing script is optional and used
+  # if your dataset requires splitting slides into smaller tiles as in gram_stains.
+
+  # (0)
+  # Path to svs folder that is input to make tiles
+  svs_dir_for_tiles: !!str <SET_YOUR_OWN_VALUE>
+
+  # (0)
+  # Path to the folder to write tile tif data
+  tile_dir: !!str tiles
+
+  # (0)
+  # Path to the folder to write tile jpg data for annotation
+  annotation_dir: !!str annotations
+
+  # (0)
+  # Path input cvs for tile production
+  csv_in_path: !!str <SET_YOUR_OWN_VALUE>
+
+  # (0)
+  # Path to the output tile cvs
+  csv_out_path: !!str <SET_YOUR_OWN_VALUE>
+
+  # (0)
+  # tile compression, downsizing resolution for output tif and jpeg tiles
+  # A factor of 1.5 downsizes a 60x slide to 40x
+  tile_compression_factor: !!float 1.5
+
+  # (0)
+  # tile size
+  tile_window_size: !!int 10000
+
+patch:
+  # Patch Extraction Configuration
+
+  # (2, 3, 4, 5)
+  # Magnification level to use for extracting patches
+  magnification: !!float 10
+
+  # (2)
+  # Original Magnification level for your dataset.
+  # Optional, Set manually if not included in slide metadata
+  original_magnification: null
+
+  # (2, 3, 4, 5)
+  # Size of the extracted patches
+  patch_size: !!int 224
+
+  # (2, 3, 5)
+  # Path to the pickle file containing metadata for the .svs files
+  # Example: meta/dhmc_rcc_svs.pickle
+  svs_meta: !!str <SET_YOUR_OWN_VALUE>
+
+  # (2, 4)
+  # Number of parallel workers for processing
+  num_workers: !!int 4
+
+  # (4, 5)
+  # Backbone model for feature extraction
+  backbone: resnet_18
+
+  # (4)
+  # Batch size for processing slide patches
+  batch_size: !!int 256
+
+  # (2)
+  # Filtering style. Either "default" or gram_stains"
+  filtering_style: !!str default
+
+  # (2)
+  # Mask magnification for color filtering during patch extraction.
+  # A lower magnification will run faster but will be less precise
+  mag_mask: !!float 0.3125
+
+feature:
+  # Feature Extraction Configuration
+
+  # (4)
+  # Mean values for each color channel in the image dataset
+  path_mean: [0.7968, 0.6492, 0.7542]
+
+  # (4)
+  # Standard deviation values for each color channel in the image dataset
+  path_std: [0.1734, 0.2409, 0.1845]
+
+
+optional:
+  # (2)
+  # Path to a single .svs file for processing. If specified, only this file will 
+  # be processed.
+  svs_path: null
+
+
