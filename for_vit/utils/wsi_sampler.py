@@ -87,7 +87,7 @@ class WsiSampler:
         if self.positions is None:
             self.pos_tile, pos_left = self.ms.sample_all(patch_size,
                                                             mag,
-                                                            threshold=0.25)
+                                                            threshold=0.2)
             self.positions = pos_left.tolist()
         
         # pos contains up to n coordinates w.r.t. WSI thumbnail. These coordinates

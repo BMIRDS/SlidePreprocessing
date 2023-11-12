@@ -28,40 +28,20 @@ class GramStains(MetaFile):
             if len(d[i]) < 4:
                 continue
             results.append([
-                d[i]['Comments (Culture)'],
-                d[i]['Gram stain description #1'],
-                d[i]['Gram stain description #2'],
-                d[i]['Inflam (Quant)'],
-                d[i]['Inflammatory cells'],
+                d[i]['Orientation'],
                 d[i]['Morphology'],
                 d[i]['Organism (Culture)'],
-                d[i]['Quant (1)'],
-                d[i]['Quant (2)'],
-                d[i]['Quantity (Culture)'],
                 d[i]['Specimen type'],
-                d[i]['Image ID'],
-                d[i]['Tile Annotation'],
-                d[i]['Tile Density'],
-                d[i]['Focus'],
+                d[i]['Image ID']
             ])
 
         df = pd.DataFrame(results)
         df.columns = [
-            'comments_(culture)',
-            'gram_stain_description_1',
-            'gram_stain_description_2',
-            'inflam_(quant)',
-            'inflammatory_cells',
+            'orientation',
             'morphology',
             'organism_(culture)',
-            'quant_(1)',
-            'quant_(2)',
-            'quantity_(culture)',
             'specimen_type',
-            'image_id',
-            'tile_annotation',
-            'tile_density',
-            'focus',
+            'image_id'
         ]
     
         # df['id_patient'] = df.id_patient.apply(
@@ -70,8 +50,9 @@ class GramStains(MetaFile):
         df['study_name'] = self.study_name
         
         # remove slides that have both gram positive and negativ bacteria
-        df.drop(df[df['tile_annotation'] == "Both"].index, inplace = True)
-        df.drop(df[df['tile_annotation'] == "None"].index, inplace = True)
+        df.drop(df[df['morphology'] == "Both"].index, inplace = True)
+        df.drop(df[df['morphology'] == "None"].index, inplace = True)
+        
         
         print(f"[INFO] Data Frame Shape: {df.shape}")
         print(f"[INFO] Unique Patients: {df.id_patient.unique().shape}")
@@ -95,6 +76,8 @@ class GramStains(MetaFile):
 
         df_svs['id_svs'] = df_svs.id_patient
         df_svs['study_name'] = self.study_name
+        
+        print("[INFO] ", df_svs.describe())
         
         self.df = self.df.loc[self.df.id_patient.isin(df_svs.id_patient)].reset_index(drop=True)
         

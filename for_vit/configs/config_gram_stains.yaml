@@ -1,26 +1,16 @@
 study:
-  study_name: !!str gram_stains
+  study_name: !!str dartmouth
   dataset_type: !!str GramStains
-  svs_dir: !!str /pool2/users/jackm/dpool/data/svs
-  json_path: !!str meta-files/gram_stains_copy.json
-  stratify_by: !!str tile_annotation
+  svs_dir: !!str /pool2/data/WSI_GramStains/Dartmouth
+  json_path: !!str /pool2/users/jackm/Dartmouth/Dartmouth_gram_stains.json
+  stratify_by: !!str morphology
   num_folds: !!int 5
   image_extension: !!str .svs
-
-tiles:
-  svs_dir_for_tiles: /pool2/users/jackm/dpool/data/svs
-  tile_dir: !!str tiles
-  annotation_dir: !!str annotations
-  csv_in_path: !!str meta-files/gram_stains.csv
-  csv_out_path: !!str meta-files/gram_stains_tiles.csv
-  tile_compression_factor: !!float 1.5
-  tile_window_size: !!int 10000
-
 
 patch:
   magnification: !!float 40
   original_magnification: !!float 40
-  svs_meta: !!str meta/gram_stains_svs.pickle
+  svs_meta: !!str meta/dartmouth_svs.pickle
   patch_size: !!int 112
-  filtering_style: !!str gram_stains
+  filtering_style: !!str default
   mag_mask: !!float 2.5

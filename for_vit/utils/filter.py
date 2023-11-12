@@ -35,7 +35,7 @@ def filter_purple(img: np.ndarray):
                                img_scaled.reshape(h, w, -1)).astype(int)
 
 def is_stained_dot(r: float, g: float, b: float):
-    if (r > 90 and g < 220 and b < 220 and b > g - 10 and r > g - 10) or (r < 50 and g < 50 and b > 120):
+    if (r > 115 and g < 235 and b < 235 and b > g - 30 and r > g - 30) or (r < 50 and g < 50 and b > 120):
         return True
     return False
 
