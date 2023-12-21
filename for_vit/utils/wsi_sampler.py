@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List, Tuple
 
 import numpy as np
 import PIL
@@ -9,53 +10,86 @@ from .wsi import WSI
 from .wsi_mask import WsiMask
 
 class WsiSampler:
+    """
+    A sampler class for Whole Slide Images (WSIs) that facilitates the extraction and processing of image patches.
 
-    def __init__(self,
-                 svs_path='',
-                 load_cache=False,
-                 save_cache=True,
-                 cache_dir='patches',
-                 svs_root='',
-                 study='',
-                 mag_mask=None,
-                 saturation_enhance=1,
-                 mag_ori=None,
-                 filtering_style=''):
+    Attributes:
+        wsi (WSI): An instance of the WSI class for handling whole slide image operations.
+        ms (WsiMask): An instance of the WsiMask class for handling mask-related operations in WSIs.
+        mag_mask (float): Magnification level of the mask.
+        svs_path (str): Path to the .svs file.
+        study_identifier (str): Identifier for the study.
+        id_svs (str): Identifier for the WSI.
+        positions (list): List of positions for sequential sampling.
+
+    Methods:
+        sample: Samples a specified number of patches from the WSI at a given magnification.
+        sample_sequential: Sequentially samples patches from pre-determined positions in the WSI.
+    """
+
+    def __init__(self, svs_path: str, id_svs: str, study_identifier: str, 
+                 load_cache: bool = False, save_cache: bool = True, 
+                 cache_dir: str = 'patches', svs_root: str = '', 
+                 mag_mask: float = None, saturation_enhance: float = 1, 
+                 mag_original: float = None, filter_style: str = '') -> None:
+        """
+        Initializes the WsiSampler with the specified parameters and creates instances of WSI and WsiMask.
+
+        Args:
+            svs_path (str): Required. Path to the .svs file for the WSI.
+            id_svs (str): Required. Unique identifier for the WSI.
+            study_identifier (str): Required. Identifier for the study.
+            load_cache (bool): Flag to load cached data if available.
+            save_cache (bool): Flag to save processed data to cache.
+            cache_dir (str): Directory for storing cached data.
+            svs_root (str): Root directory for .svs files.
+            mag_mask (float): Magnification level for the mask.
+            saturation_enhance (float): Factor for saturation enhancement.
+            mag_original (float): Original magnification of the WSI.
+            filter_style (str): Style of filtering applied to the WSI.
+        """
+
         self.wsi = WSI(svs_path,
-                          svs_root,
-                          load_cache=load_cache,
-                          save_cache=save_cache,
-                          cache_dir= str(Path(cache_dir) / study),
-                          mag_ori=mag_ori)
+                        id_svs,
+                        svs_root,
+                        load_cache=load_cache,
+                        save_cache=save_cache,
+                        cache_dir= str(Path(cache_dir) / study_identifier),
+                        mag_original=mag_original)
         self.ms = WsiMask(svs_path=svs_path,
                           svs_root=svs_root,
-                          study=study,
+                          id_svs=id_svs,
+                          study_identifier=study_identifier,
                           mag_mask=mag_mask,
                           saturation_enhance=saturation_enhance,
-                          mag_ori=mag_ori,
-                          filtering_style=filtering_style)
+                          mag_original=mag_original,
+                          filter_style=filter_style)
         self.mag_mask = self.ms.mag_mask
         self.svs_path = svs_path
-        self.study = study
+        # self.study_identifier = study_identifier
         self.positions = None
 
-    def sample(self, size, n=1, mag=10, tile_size=None):
+    def sample(self, patch_size: int, num_patches: int = 1, mag: float = 10, 
+               tile_size: int = None) -> Tuple[List[np.ndarray], List[str], List[Tuple[int, int]], 
+                                               List[Tuple[int, int]], List[Tuple[int, int]]]:
         """
-        Args:
-            size (int): the size of the patch
-            n (int): the number of patches to sample
-            mag (float): the magnification of the patch to sample
-            tile_size (int): the size of the tile to sample
-        Returns:
-            imgs (list): a list of images (np array) of the patches
-            save_dirs (list): a list of the paths to where the patches are saved
-            pos_tile (list): TBD
-            pos_l (list): TBD
-            pos_g (list): TBD
+        Samples a specified number of patches from the WSI at a given magnification and size.
 
+        Args:
+            size (int): Size of the patch to sample.
+            num_patches (int): Number of patches to sample.
+            mag (float): Magnification level for sampling.
+            tile_size (int, optional): Size of the tile for sampling.
+
+        Returns:
+            list: Images of sampled patches.
+            list: Save directories for each sampled patch.
+            list: Positions of sampled patches in tile coordinates.
+            list: Positions of sampled patches in local coordinates.
+            list: Positions of sampled patches in global coordinates.
         """
-        pos_tile, pos_l, pos_g = self.ms.sample(n,
-                                                size,
+        pos_tile, pos_l, pos_g = self.ms.sample(num_patches,
+                                                patch_size,
                                                 mag,
                                                 threshold=0.05,
                                                 tile_size=tile_size)
@@ -63,27 +97,28 @@ class WsiSampler:
         imgs = []
         save_dirs = []
         for pos in pos_g:
-            img, save_dir = self.wsi.get_region(pos[1], pos[0], size, mag,
-                                                mag / size)
+            img, save_dir = self.wsi.get_region(pos[1], pos[0], patch_size, mag,
+                                                mag / patch_size)
             imgs.append(img)
             save_dirs.append(save_dir)
         return imgs, save_dirs, pos_tile, pos_l, pos_g
 
-    def sample_sequential(self, idx, n, patch_size, mag):
+    def sample_sequential(self, batch_index: int, num_patches: int, patch_size: int, 
+                          mag: int) -> Tuple[List[np.ndarray], List[str], List[Tuple[int, int]], 
+                                                       List[Tuple[int, int]], List[Tuple[int, int]]]:
         """
-        This function is the main driver behind storing coordinates of the
-        regions/patches that have tissue and calling functions to extract and save
-        such patches from the WSI
-        
+        Sequentially samples patches from predetermined positions in the WSI.
+
         Args:
-            idx (int): index of the batch
-            n (int): number of patches per batch
-            patch_size (int): size of the patch
-            mag (int): magnification of the patch
+            batch_index (int): Index of the batch to sample.
+            num_patches (int): Number of patches to sample per batch.
+            patch_size (int): Size of each patch.
+            mag (int): Magnification level for sampling.
+
         Returns:
-            imgs (list): list of images (np arrays)
-            save_dirs (list): list of save directories
+            Tuple: Containing lists of images of sampled patches, save directories for each patch, and positions.
         """
+
         if self.positions is None:
             self.pos_tile, pos_left = self.ms.sample_all(patch_size,
                                                             mag,
@@ -92,7 +127,8 @@ class WsiSampler:
         
         # pos contains up to n coordinates w.r.t. WSI thumbnail. These coordinates
         # represent the location of the patches that have tissue present
-        pos = self.positions[(idx * n):(idx * n + n)]
+        start_index = batch_index * num_patches
+        pos = self.positions[(start_index):(start_index + num_patches)]
         
         imgs = []
         save_dirs = []

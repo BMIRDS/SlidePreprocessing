@@ -8,7 +8,7 @@ from pathlib import Path
 import abc
 
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, KFold
 
 
 class MetaFile(abc.ABC):
@@ -19,30 +19,51 @@ class MetaFile(abc.ABC):
         self.json_path = json_path
         self.stratify_by = stratify_by
         self.num_folds = num_folds
-        
-    #Stratified k fold of dataset with a split depending on the given stratify_by argument
-    #Split info saved in self.df
+    
+    # Split dataset into k folds, with optional stratification
     def split(self):
-        
-        skf = StratifiedKFold(n_splits=self.num_folds, random_state=45342, shuffle=True)
+        if self.stratify_by is not None and self.stratify_by in self.df.columns:
+            # Use StratifiedKFold if stratification is required
+            kf = StratifiedKFold(n_splits=self.num_folds, random_state=45342, shuffle=True)
+            split_method = kf.split(self.df, self.df[self.stratify_by])
+        else:
+            # Use KFold if no stratification is required
+            kf = KFold(n_splits=self.num_folds, random_state=45342, shuffle=True)
+            split_method = kf.split(self.df)
 
-        # A new column named "fold" is added to the DataFrame stored in self.df.
-        # All rows in this column are initialized to 0.
+        # Initialize the "fold" column to 0
         self.df['fold'] = 0
-        print("[INFO] \n", self.df.to_string())
-        splits = skf.split(self.df, self.df[self.stratify_by])
-        for i, (_, test_index) in enumerate(splits):
+        print("[INFO - split] \n", self.df.to_string())
+
+        # Perform the split
+        for i, (_, test_index) in enumerate(split_method):
             self.df.loc[test_index, 'fold'] = i
 
-        print(pd.crosstab(self.df.fold, self.df[self.stratify_by]))
+        # Optional: Display the distribution across folds
+        print("[INFO - split] Distribution of data across folds:\n", self.df['fold'].value_counts())
+
     
     #Produces meta.pickle and svs.pickle files for dataset in specific directory
     def make_pickle(self, dir_path: str = 'meta'):
         dir_path = Path(dir_path)
         dir_path.mkdir(parents=True, exist_ok=True)
 
-        self.df.to_pickle(dir_path / f'{self.study_name.lower()}_meta.pickle')
-        self.df_svs.to_pickle(dir_path / f'{self.study_name.lower()}_svs.pickle')
+        df_meta_path = dir_path / f'{self.study_name.lower()}_meta.pickle'
+        self.df.to_pickle(df_meta_path)
+        df_svs_path = dir_path / f'{self.study_name.lower()}_svs.pickle'
+        self.df_svs.to_pickle(df_svs_path)
+
+        # Example (Preview) files
+        self.df.head(2).to_csv(
+            str(df_meta_path).replace(".pickle", "_preview.txt"), 
+            index=False, sep='\t')
+        self.df_svs.head(2).to_csv(
+            str(df_svs_path).replace(".pickle", "_preview.txt"), 
+            index=False, sep='\t')
+
+        # Remind to set the object paths to the user.
+        print(f"[INFO - make_pickle] Make sure to set the svs meta file path in your config file.")
+        print(f"  svs_meta: !!str {df_svs_path}")
 
     @abc.abstractmethod
     def parse_json(self):

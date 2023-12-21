@@ -85,25 +85,28 @@ class WsiMask:
     def __init__(self,
                  svs_path='',
                  svs_root='',
-                 study='',
+                 id_svs='',
+                 study_identifier='',
                  mag_mask=None,
                  cache_dir='caches',
                  load_cache=False,
                  saturation_enhance=1,
-                 mag_ori=None,
-                 filtering_style=''):
+                 mag_original=None,
+                 filter_style=''):
         self.svs_path = svs_path
         self.cache_dir = cache_dir
         self.svs_root = svs_root
-        self.study = study
+        self.id_svs = id_svs
+        self.study_identifier = study_identifier
         self.saturation_enhance = saturation_enhance
-        self.filtering_style = filtering_style
+        self.filter_style = filter_style
         self.wsi = WSI(self.svs_path,
+                       self.id_svs,
                        self.svs_root,
                        load_cache=False,
                        save_cache=False,
                        cache_dir=None,
-                       mag_ori=mag_ori)
+                       mag_original=mag_original)
         self.mag_mask = mag_mask
         self.im_low_res = self.wsi.downsample(self.mag_mask)
         self.load_cache = load_cache
@@ -222,7 +225,7 @@ class WsiMask:
         # saving images of the overlay the mask on the thumbnail
         combined_view(
             thumbnail, patch_mask,
-            self._mask_path(self.svs_path).replace(
+            self._mask_path().replace(
                 'mask.npy', 'visualization-patch-overlay.jpeg'))
 
         # list of pixel coordinates w.r.t. thumnail image of the patches where the mask is true (where tissue is present)
@@ -235,7 +238,7 @@ class WsiMask:
         Gets the mask of the WSI specified by svs_path. If the mask exists, load the mask. Otherwise, calculate the mask and save it.
         """
         # get the mask
-        mask_file = self._mask_path(self.svs_path)
+        mask_file = self._mask_path()
         # if mask exists, load the mask
         if Path(mask_file).exists() and self.load_cache:
             self.mask = np.load(mask_file)
@@ -259,24 +262,25 @@ class WsiMask:
                 thumbnail = np.array(thumbnail)
                 thumbnails.append(thumbnail)
         # mask is a binary composite mask that selects regions with colors
-        mask = filter_composite(thumbnails, self.filtering_style)
+        mask = filter_composite(thumbnails, self.filter_style)
         # saving the images of the overlay of the map
         combined_view(
             thumbnails[0], mask,
-            self._mask_path(self.svs_path).replace(
+            self._mask_path().replace(
                 'mask.npy', 'visualization-tissue-overlay.jpeg'))
         self.mask = mask
 
-    def _mask_path(self, svs_path):
+    def _mask_path(self):
         """
-        Args:
-            svs_path (str): the path to the WSI
+        # Args:
+        #     svs_path (str): the path to the WSI
         Returns:
             str: the path to where the mask file of the WSI is stored
         """
-        mask_path = f"{Path(svs_path).stem}{'-mask.npy'}"
+        mask_path = f"{self.id_svs}{'-mask.npy'}"
         
-        save_path = Path(self.cache_dir) / "masks" / self.study / mask_path
+        # TODO: UTILIZE IO_UTILS.PY
+        save_path = Path(self.cache_dir) / "masks" / self.study_identifier / mask_path
         
         Path.mkdir(save_path.parent, parents=True, exist_ok=True)
         

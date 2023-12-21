@@ -36,28 +36,36 @@ from utils.io_utils import create_slide_meta_dir
 def call_get_patches(params):
     return get_patches(*params)
 
-def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int,
-                magnification: float, mag_ori: float, filtering_style: str, mag_mask: float):
+def get_patches(svs_fname: str, svs_root: str, id_svs: str, study_identifier: str, 
+                patch_size: int, magnification: float, mag_original: float, 
+                filter_style: str, mag_mask: float):
     try:
         wsi = WsiSampler(svs_path=svs_fname,
                          svs_root=svs_root,
-                         study=study,
+                         id_svs=id_svs,  # Passing id_svs to WsiSampler
+                         study_identifier=study_identifier,
                          mag_mask=mag_mask,
                          saturation_enhance=0.5,
-                         mag_ori=mag_ori,
-                         filtering_style=filtering_style)
+                         mag_original=mag_original,
+                         filter_style=filter_style)
         _, save_dirs, _, _, _ = wsi.sample_sequential(0, 100000,
                                                       patch_size,
                                                       magnification)
         svs_fname = Path(svs_fname)
         df = pd.DataFrame(save_dirs, columns=['file'])
-        df['id_svs'] = svs_fname.stem
+        df['id_svs'] = id_svs  # Use passed id_svs instead of deriving from svs_fname
         df['svs_root'] = svs_root
 
-        output_dir = create_slide_meta_dir(study, magnification, patch_size)
+        output_dir = create_slide_meta_dir(study_identifier, magnification, patch_size)
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"{svs_fname.with_suffix('.pickle')}"
+        output_path = output_dir / f"{id_svs}.pickle"
         df.to_pickle(output_path)
+
+        # Path for the example text file
+        example_file_path = output_dir / f"{id_svs}_example.txt"
+        # Save the first two rows of the DataFrame to the text file
+        df.head(2).to_csv(example_file_path, index=False, sep='\t')
+
 
     except Exception as e:
         # print(inputs)
@@ -66,21 +74,40 @@ def get_patches(svs_fname: str, svs_root: str, study: str, patch_size: int,
 
 
 def main():
+    """
+    Main function to process image patches.
+
+    This function initializes the configuration using default and user-provided settings.
+    It then determines the source of slide image paths (SVS files) based on the given configuration.
+
+    For each slide image, it either retrieves file details from the configuration or reads
+    metadata from a dataframe. It then creates a list of tuples (paired_inputs) containing
+    the image filename, folder, study name, and patch configuration parameters.
+    These tuples are used as input for the `call_get_patches` function to process each image.
+    """
+
+    # Initialize configuration with default and user settings
     args = default_options()
     config = Config(
         args.default_config_file,
         args.user_config_file)
 
+    # Retrieve SVS path and study name from configuration
     svs_path = config.optional.svs_path
     study_name = config.study.study_name
   
+    # Process individual SVS file if path is specified
     if svs_path is not None:
         svs_path = Path(svs_path)
         svs_fname = svs_path.name
         svs_folder = str(svs_path.parent)
+        id_svs = svs_path.stem  # As no id_svs data give, use stem as ID
+
+        # Create tuples of image processing parameters
         paired_inputs = [
             (svs_fname,
-             svs_folder, 
+             svs_folder,
+             id_svs,
              study_name,
              config.patch.patch_size,
              config.patch.magnification,
@@ -88,15 +115,20 @@ def main():
              config.patch.filtering_style,
              config.patch.mag_mask)]
     else:
+        # Process a batch of SVS files based on metadata dataframe
         df_sub = pd.read_pickle(config.patch.svs_meta)
         paired_inputs = []
         for i, row in df_sub.iterrows():
-            svs_fname = f"{row['id_svs']}{config.study.image_extension}"
             full_path = Path(row['svs_path'])
+            svs_fname = full_path.name
             svs_folder = str(full_path.parent)
+            id_svs = row['id_svs']
+
+            # Append image processing parameters for each file in the dataframe
             paired_inputs.append(
                 (svs_fname,
                  svs_folder,
+                 id_svs,
                  study_name,
                  config.patch.patch_size,
                  config.patch.magnification,
@@ -104,6 +136,7 @@ def main():
                  config.patch.filtering_style,
                  config.patch.mag_mask))
 
+    # Call the function to process each image patch
     _ = process_map(call_get_patches,
                     paired_inputs, 
                     max_workers=config.patch.num_workers)
