@@ -1,3 +1,11 @@
+# Exclude project files
+for_vit/caches/
+for_vit/meta/
+for_vit/patches/
+MaskHIT_Prep/caches/
+MaskHIT_Prep/meta/
+MaskHIT_Prep/patches/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
