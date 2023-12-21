@@ -17,14 +17,14 @@ study:
   # (1, 2, 3, 4, 5)
   # Name of the study to be used
   # Example: TCGA_COAD
-  study_name: !!str <SET_YOUR_OWN_VALUE>
+  study_name: !!str RCC_Profile_KIRP
 
   # (1)
-  # Indicates a dataset class for json processing pipeline
+  # Indicates a class for json processing pipeline
   # See datasets/ directory for available classes.
-  # Available: TCGA, GramStains, IBD
+  # Available: TCGA, GramStains
   # Please implement a dataset file if necessary
-  dataset_type: !!str <SET_YOUR_OWN_VALUE>
+  dataset_type: !!str RCCp
 
   # (0,1)
   # Path to the folder containing svs data
@@ -34,11 +34,11 @@ study:
 
   # (1)
   # Path to the json file with dataset info.
-  json_path: !!str <SET_YOUR_OWN_VALUE>
+  json_path: !!str /users/f002c48/prj_RCC_profile/meta/RCC_profile_KIRP.json
 
   # (1)
   # Dataset field to use with stratification.
-  stratify_by: !!str status
+  stratify_by: null
 
   # (1)
   # Number of folds for kfold cross validation
@@ -86,7 +86,7 @@ patch:
 
   # (2, 3, 4, 5)
   # Magnification level to use for extracting patches
-  magnification: !!float 10
+  magnification: !!float 5
 
   # (2)
   # Original Magnification level for your dataset.
@@ -100,7 +100,7 @@ patch:
   # (2, 3, 5)
   # Path to the pickle file containing metadata for the .svs files
   # Example: meta/dhmc_rcc_svs.pickle
-  svs_meta: !!str <SET_YOUR_OWN_VALUE>
+  svs_meta: !!str meta/rcc_profile_kirp_svs.pickle
 
   # (2, 4)
   # Number of parallel workers for processing
