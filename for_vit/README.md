@@ -1,31 +1,28 @@
+## MaskHIT_Prep (Formerly for_vit)
+This tool is for preprocessing slides specifically for the WSI-PLP library. More about WSI-PLP can be found here: [https://github.com/BMIRDS/WSI-PLP](https://github.com/BMIRDS/WSI-PLP).
+
 # Installing Dependencies (Recommended method)
-Use `install_requirements.sh`
+For installing necessary dependencies, use the provided script:
+`install_requirements.sh`
+
+For Singularity/Docker environment, use the following instead:
+`install_requirements_for_container.sh`
 
 ## Installation Pitfalls
-- AttributeError: partially initialized module 'cv2' has no attribute 'gapi_wip_gst_GStreamerPipeline' (most likely due to a circular import)
-You have multiple instances of opencv. do pip uninstall openslide-python
+- `AttributeError: partially initialized module 'cv2' has no attribute 'gapi_wip_gst_GStreamerPipeline' (most likely due to a circular import)`
 
-- OSError: libopenslide.so.0: cannot open shared object file: No such file or directory
-You don't have openslide binary installed. do apt install openslide-tools python3-openslide
+You may have multiple instances of opencv.
 
-# TODO:
-## High Priority
-- Remove hard-coded data: pool2 paths and cancer types: current default parameters should be noted in the help of each argument.
-- Handling data without TCGA-like meta-data. Jack has implemented, and need another validation.
-- README should describe the outcome of this scripts. What are we expected to have after running these? This will be specification for the next model pipeline and would give some clues how to process individual dataset.
-- Coding standardization: ex) Using pathlib over os.path, os.makedirs, os.glob
-- Exception handling should be specific.
-- Logging for traceable process
-- Documentation: Each script. Each arguments.
-- Review default values for arguments. If we set a existing dataset as default, we should provide those metadata as well to serve for pipeline testing.
-- Review hardcoded values. ex) PATH_MEAN, PATH_STD
-- Unit testing. Should use pytest or similar library for unit test and integration test. 
-- README should be more descriptive for both for_vit/ and maskhit/. It should have overview of what the library does, and also a set of tutorials for various input type. For example, see this: https://github.com/facebookresearch/vissl
+Please do:
+`pip uninstall openslide-python`
 
+- `OSError: libopenslide.so.0: cannot open shared object file: No such file or directory`
 
-## Low Priority
-- linting (Make sure everyone install/enable pep8 or flake8).
+You don't have openslide binary installed.
 
+Please do:
+
+`apt install openslide-tools python3-openslide`
 
 # For a typical TCGA dataset, please follow `pipeline.sh`
 
@@ -50,3 +47,4 @@ You don't have openslide binary installed. do apt install openslide-tools python
 `python 04_feature_extraction.py -c=TCGA_COAD -m=10`
 ## 5. Post process
 `python 05_post_process.py -c=TCGA_COAD --svs-meta=meta/tcga_coad_svs.pickle`
+
