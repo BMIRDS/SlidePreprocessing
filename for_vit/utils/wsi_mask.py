@@ -190,7 +190,9 @@ class WsiMask:
         
         # resize the mask to the new dimensions
         mask = resize(self.mask, (new_h, new_w))
-        patch_stacked_mask = view_as_windows(self.mask, (block_size, block_size),
+
+        # passing the resized mask
+        patch_stacked_mask = view_as_windows(mask, (block_size, block_size),
                                              step=block_size)
         # patch_tissue_pct is the percentage of tissue in each patch
         patch_tissue_pct = patch_stacked_mask.mean(axis=(2, 3))
@@ -209,7 +211,7 @@ class WsiMask:
             pos (numpy array): stores the coordinates of patches where tissue is present in the WSI thumnail
         """
 
-        # path_tissue_pct represents a 'map' where each entry corresponds to a tissue percentage in a patch of the original WSI
+        # patch_tissue_pct represents a 'map' where each entry corresponds to a tissue percentage in a patch of the original WSI
         patch_tissue_pct = self.get_tissue_map(patch_size, mag)
 
         # patch_mask represents a binary 'map' based on the threshold
