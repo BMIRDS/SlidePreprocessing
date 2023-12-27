@@ -26,88 +26,45 @@ class IBD(MetaFile):
             if len(d[i]) < 4:
                 continue
             results.append([
-                d[i]['Case Number '],
-                d[i]['Dx (U=UC, C=Cr, I=Ind)'],
-                d[i]['Severe AC'],
-                d[i]['Mod AC'],
-                d[i]['Mild AC'],
-                d[i]['Inactive'],
-                d[i]['Ileitis'],
-                d[i]['Active Ch. Ileitis'],
-                d[i]['Dysplasia arising from ACC'],
-                d[i]['Granuloma'],
-                d[i]['Inflammatory Polyp'],
-                d[i]['Architecture Alt.'],
-                d[i]['Ileum Inc (y/n)'],
-                d[i]['Other'],
-                d[i]['1st or Surveillance'],
-                d[i]['Slide Comments'],
-                d[i]['Unnamed: 16'],
-                d[i]['Slide Count'],
-                d[i]['Path'],
+                d[i]['Slide'],
+                d[i]['Class']
             ])
 
         df = pd.DataFrame(results)
         df.columns = [
             'case_number',
-            'Dx (U=UC, C=Cr, I=Ind)',
-            'Severe AC',
-            'Mod AC',
-            'Mild AC',
-            'Inactive',
-            'Ileitis',
-            'Active Ch. Ileitis',
-            'Dysplasia arising from ACC',
-            'Granuloma',
-            'Inflammatory Polyp',
-            'Architecture Alt.',
-            'Ileum Inc (y/n)',
-            'Other',
-            '1st or Surveillance',
-            'Slide Comments',
-            'Unnamed: 16',
-            'Slide Count',
-            'Path'
+            'Diagnosis'
         ]
-    
-        df['case_number'] = df.case_number.apply(
-                lambda x: x.split('-')[1])
-        df['study_name'] = self.study_name
-        
-        print(df.shape)
-        print(df.case_number.unique().shape)
-        print(df.describe())
 
+        df['study_name'] = self.study_name
+        print(df.describe())
         return df
       
     # produces self.df_svs by reading info from svs file names from input svs folder
     def parse_svs(self):
-        # creates a list of files found in the directory
+        # creates a list of files found in provided directory
         files = [str(p) for p in Path(self.svs_path).rglob('*.svs')]
+        # including 2018 csv data
+        files_2018 = [str(p) for p in Path('../../../../datasets/WSI_IBD/svs_2018/').rglob('*.svs')]
+        files = files + files_2018
         print(f"{len(files)} files found!")
 
         df_svs = pd.DataFrame(files, columns=['svs_path'])
         
         # extracting the case numbers from the slides
-        df_svs['case_number'] = df_svs.svs_path.apply(
-            lambda x: x.split('/')[5])
-        df_svs['case_number'] = df_svs.case_number.apply(
-            lambda x: x.split(' ')[0])
-
+        case_numbers = []
+        for index, row in df_svs.iterrows():
+            if row['svs_path'].split('/')[6] == 'svs_2019':
+                case_numbers.append(row['svs_path'].split('/')[7])
+            else:
+                case_numbers.append(row['svs_path'].split('/')[8])
+        df_svs['case_number'] = case_numbers
         df_svs['study_name'] = self.study_name
-        
+
         return df_svs
 
 if __name__ == '__main__':
     # testing to see if id's are extracted succesfully
-    files = [str(p) for p in Path('/pool2/data/WSI_IBD/svs_2019').rglob('*.svs')]
+    files = [str(p) for p in Path('../../../../../datasets/WSI_IBD/svs_2019/').rglob('*.svs')]
     print(f"{len(files)} files found!")
     df_svs = pd.DataFrame(files, columns=['svs_path'])
-
-    # extracting the case numbers from the slides
-    df_svs['case_number'] = df_svs.svs_path.apply(
-        lambda x: x.split('/')[5])
-    df_svs['case_number'] = df_svs.case_number.apply(
-        lambda x: x.split(' ')[0])
-
-    df_svs.to_csv('with_id_names_extracted.csv')
