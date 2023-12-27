@@ -1,6 +1,14 @@
 ## MaskHIT_Prep (Formerly for_vit)
 This tool is for preprocessing slides specifically for the WSI-PLP library. More about WSI-PLP can be found here: [https://github.com/BMIRDS/WSI-PLP](https://github.com/BMIRDS/WSI-PLP).
 
+## Quick Start Guide
+A brief overview for new users handling a new dataset:
+1. Create a CSV file describing the dataset with specific column names. See examples in `meta-files/`.
+2. Convert CSV to JSON using `scripts/csv_to_json.py`.
+3. Write a dataset class under `datasets/` for dataset processing.
+4. Create a `user_config` file in `configs/` detailing file paths and metadata. Start by copying `config_default.yaml` and implement based on other config files.
+5. Run `pipeline.sh` to execute scripts 01 to 05. In case of issues, run each script manually.
+
 # Installing Dependencies (Recommended method)
 For installing necessary dependencies, use the provided script:
 `install_requirements.sh`
@@ -9,22 +17,17 @@ For Singularity/Docker environment, use the following instead:
 `install_requirements_for_container.sh`
 
 ## Installation Pitfalls
-- `AttributeError: partially initialized module 'cv2' has no attribute 'gapi_wip_gst_GStreamerPipeline' (most likely due to a circular import)`
+- `AttributeError: partially initialized module 'cv2' has no attribute 'gapi_wip_gst_GStreamerPipeline'`
+    - Cause: Multiple instances of opencv.
+    - Fix: `pip uninstall openslide-python`
+- `OSError: libopenslide.so.0: cannot open shared object file`
+    - Cause: Missing openslide binary.
+    - Fix: `apt install openslide-tools python3-openslide`
 
-You may have multiple instances of opencv.
+## Dataset Preparation
+### CSV File Structure
+Describe the required structure of the CSV file. Include an example.
 
-Please do:
-`pip uninstall openslide-python`
-
-- `OSError: libopenslide.so.0: cannot open shared object file: No such file or directory`
-
-You don't have openslide binary installed.
-
-Please do:
-
-`apt install openslide-tools python3-openslide`
-
-# For a typical TCGA dataset, please follow `pipeline.sh`
 
 ## 1. Process the meta files that include the outcome and the files information
 `python 01_get_svs_meta.py`
