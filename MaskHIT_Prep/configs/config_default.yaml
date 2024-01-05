@@ -116,6 +116,7 @@ patch:
 
   # (2)
   # Filtering style. Either "default" or gram_stains"
+  #TODO: explain default: H&E-stain
   filtering_style: !!str default
 
   # (2)
@@ -128,6 +129,7 @@ feature:
 
   # (4)
   # Mean values for each color channel in the image dataset
+  #TODO: where these values came from?
   path_mean: [0.7968, 0.6492, 0.7542]
 
   # (4)

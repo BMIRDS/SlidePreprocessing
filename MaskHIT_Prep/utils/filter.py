@@ -158,7 +158,8 @@ def select_mask_instances(mask):
 
 def filter_composite(imgs: np.ndarray, style: str='default'):
     # select the region with colors
-        
+    
+    #TODO: order should be, default -> gram_stains -> else
     if style == 'gram_stains':
         mask_s = np.zeros_like(imgs[0][:, :, 0]).astype(int)
         for i, img in enumerate(imgs):
