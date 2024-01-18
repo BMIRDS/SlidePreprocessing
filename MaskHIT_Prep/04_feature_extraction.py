@@ -100,6 +100,21 @@ def main():
 
     model = create_model(num_layers, True, 1)
     model.fc = nn.Identity()
+
+    # User-defined feature extractor
+    if config.patch.pretrained_model_path:
+        # Load the pretrained model state dict
+        pretrained_dict = torch.load(config.patch.pretrained_model_path)
+
+        if isinstance(pretrained_dict, nn.Module):
+            # If it's a full model, convert to a state dict from it
+            pretrained_dict = pretrained_dict.state_dict()
+
+        # Filter out `fc` layer from the pretrained_dict
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k not in ['fc.weight', 'fc.bias']}
+        # Load the filtered state dict into your model
+        model.load_state_dict(pretrained_dict, strict=False)
+
     model.cuda()
     model.eval()
 

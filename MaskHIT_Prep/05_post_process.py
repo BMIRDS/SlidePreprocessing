@@ -153,6 +153,7 @@ def main():
     df_svs = df_svs.merge(df_sum, on='id_svs', how='inner')
     df_svs = df_svs.loc[df_svs.valid > 25]
     df_svs.to_pickle(svs_meta)
+    df_svs.head(2).to_csv(str(svs_meta).replace('.pickle', '_preview.txt'), index=False, sep='\t')
 
     print("")
     print("=" * 40)

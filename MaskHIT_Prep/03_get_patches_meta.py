@@ -108,6 +108,9 @@ def main():
         # TODO: This should work but need to check with real data.
         df['id_patient'], df['type'] = zip(*df['file'].apply(extract_tcga_info))
     else:
+        #TODO: This behavior seems dangerous. Shouldn't we have a separated script
+        #and describe the input files definition so we don't need to update code
+        #based on a dataset?
         df['id_patient'] = df['id_svs']
         df['type'] = '01Z'
 

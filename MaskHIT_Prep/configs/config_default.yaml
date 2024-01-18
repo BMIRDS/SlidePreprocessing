@@ -10,6 +10,12 @@
 #  (custom): more likely to need modification for each user
 #---------------------------------------------------
 
+#TODO: Clarify which values are minimally required.
+#Suggestions:
+# <SET_YOUR_OWN_VALUE> for required values.
+# null for optional value. When use null, don't add typehint.
+# For null-able values, we should not add typehint.
+# Instead, note the type in the comment: (optional, string)
 
 study:
   ## Study Configuration
@@ -22,23 +28,29 @@ study:
   # (1)
   # Indicates a dataset class for json processing pipeline
   # See datasets/ directory for available classes.
-  # Available: TCGA, GramStains, IBD
-  # Please implement a dataset file if necessary
+  # Currently available: TCGA, GramStains, IBD, RCCp
+  # Please implement a dataset file if necessary.
   dataset_type: !!str <SET_YOUR_OWN_VALUE>
 
   # (0,1)
   # Path to the folder containing svs data
   # Example: /pool2/data/WSI_TCGA/Colorectal
   # Set to "tiles" if using tile preprocessing
+  # This can be left unset if you have a JAON file with each slide path
+  # and properly parsed in your dataset class.
   svs_dir: !!str <SET_YOUR_OWN_VALUE>
 
   # (1)
   # Path to the json file with dataset info.
+  # Please read README to prepare a JSON file.
   json_path: !!str <SET_YOUR_OWN_VALUE>
 
   # (1)
-  # Dataset field to use with stratification.
-  stratify_by: !!str status
+  # Dataset field to use with stratification (Optional[String]).
+  # Set null for no stratification.
+  #TODO: Change the default value from 'status'. It should be <SET_YOUR_OWN_VALUE> 
+  #and add examples?.
+  stratify_by: null
 
   # (1)
   # Number of folds for kfold cross validation
@@ -100,6 +112,7 @@ patch:
   # (2, 3, 5)
   # Path to the pickle file containing metadata for the .svs files
   # Example: meta/dhmc_rcc_svs.pickle
+  # TODO: This is a saving path, right? We should clarify that this is not input.
   svs_meta: !!str <SET_YOUR_OWN_VALUE>
 
   # (2, 4)
@@ -108,7 +121,17 @@ patch:
 
   # (4, 5)
   # Backbone model for feature extraction
-  backbone: resnet_18
+  # Currently, only models from the ResNet family are available.
+  # Default: resnet_18, using ImageNet features.
+  # Replace with another ResNet model if necessary.
+  backbone: !!str resnet_18
+
+  # (4, 5)
+  # Path to a custom feature extractor snapshot (optional, string)
+  # Optional: Set this only if you have a specialized feature extractor,
+  # possibly pretrained on a relevant dataset.
+  # Default: Uses the standard ImageNet pretrained model.
+  pretrained_model_path: null
 
   # (4)
   # Batch size for processing slide patches
@@ -122,6 +145,7 @@ patch:
   # (2)
   # Mask magnification for color filtering during patch extraction.
   # A lower magnification will run faster but will be less precise
+  #TODO: Ask why this value?
   mag_mask: !!float 0.3125
 
 feature:
